@@ -30,7 +30,9 @@ Silently read all available context before asking a single question:
 **User preferences (user-level, not project-level):**
 - Read `~/.claude/CLAUDE.md` if it exists — this contains preferences this user has set across projects
 
-Use this to orient yourself — not to skip questions. File content tells you what was written down before; it doesn't tell you what the user actually wants or how they work. Always confirm project purpose and goals directly with the user.
+After reading, before asking anything, tell the user what you found — briefly and in plain language. For example: "I can see this is a Node.js project with a test suite and a CI config. I also found an existing CLAUDE.md with some preferences already set." This is a given — the user should always know what you already have so they don't re-explain things you already know, and so they can correct anything you've misread.
+
+Then move to Phase 2 to fill in what the files can't tell you.
 
 ## Phase 2: Discovery interview
 
