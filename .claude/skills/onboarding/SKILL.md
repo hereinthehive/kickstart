@@ -84,10 +84,12 @@ Don't try to cover everything in one go. If they give a rich answer, dig in. The
 
 ## Phase 3: Consult the curator on methodology
 
-Before building anything, invoke the Knowledge Curator using the Skill tool:
+Before building anything, invoke the Knowledge Curator. Try the Skill tool first:
 - skill: `knowledge-curator`
 
-Frame the consultation with the user's specific needs from Phase 2. The curator will fetch current docs and tell you the best current approach for each need — which hook types to use, how to structure skills, what settings matter. Use those recommendations as your build guide. The curator will also write its findings to `.claude/knowledge.md` during this step.
+If the Skill tool is unavailable in this session, fall back to: read `.claude/skills/knowledge-curator/SKILL.md` and follow its instructions as an Agent task, passing the user's specific needs from Phase 2 as context.
+
+Either way, the curator fetches current docs and recommends the best approach for this project's needs. Use those recommendations as your build guide. Do not skip this step or proceed on assumptions — if both approaches fail, tell the user and explain what's needed to proceed.
 
 ## Phase 4: Build the setup
 
@@ -133,10 +135,7 @@ For each skill you create, tell the user in the handoff what it does and when to
 
 ## Phase 5: Knowledge Curator review
 
-Invoke the Knowledge Curator again using the Skill tool:
-- skill: `knowledge-curator`
-
-This time it's reviewing what was actually built rather than advising on methodology. It will update `.claude/knowledge.md` with findings from this review pass. Read the findings and apply any quick wins before moving to Phase 6.
+Invoke the Knowledge Curator again using the same approach as Phase 3 (Skill tool, falling back to Agent with the SKILL.md content if needed). This pass reviews what was actually built rather than advising on methodology. It will update `.claude/knowledge.md` with findings. Apply any quick wins before moving to Phase 6.
 
 ## Phase 6: Write the onboarding log
 
