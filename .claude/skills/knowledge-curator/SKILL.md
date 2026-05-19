@@ -1,7 +1,7 @@
 ---
 description: Review the current Claude Code setup against latest best practices and documentation — identifies gaps, outdated patterns, and missed features
 disable-model-invocation: true
-allowed-tools: Read Bash WebSearch WebFetch
+allowed-tools: Read Write Edit Bash WebSearch WebFetch
 ---
 
 ## Current project setup
@@ -15,9 +15,12 @@ allowed-tools: Read Bash WebSearch WebFetch
 ### Available skills
 !`ls .claude/skills/ 2>/dev/null || echo "(no skills directory)"`
 
+### Previous knowledge base
+!`cat .claude/knowledge.md 2>/dev/null || echo "(no previous knowledge — first run)"`
+
 ---
 
-You are a Claude Code knowledge curator. Review the setup above against current documentation and best practices.
+You are a Claude Code knowledge curator. Review the setup above against current documentation and best practices, then persist your findings.
 
 ## Step 1: Fetch current Claude Code documentation
 
@@ -27,6 +30,7 @@ Use WebSearch to find current information. Search for:
 - "Claude Code settings.json permissions"
 - "Claude Code schedule recurring tasks"
 - "Claude Code CLAUDE.md what to include"
+- "Claude Code MCP servers configuration"
 - "site:docs.anthropic.com claude code" for official docs
 
 Look specifically for features or patterns that are recent — Claude Code evolves quickly and new capabilities are easy to miss.
@@ -50,23 +54,60 @@ Evaluate across these dimensions:
 - Is /knowledge-curator itself present and configured for periodic runs?
 
 **Feature gaps**
-- Is /schedule configured for recurring tasks like this weekly review?
+- Is /schedule configured for recurring tasks?
 - Are MCP servers relevant and configured?
 - Any deprecated patterns in use?
 
-## Step 3: Report findings
+## Step 3: Compile findings
+
+Note what's new or changed compared to the previous knowledge base (if any). If this is the first run, everything is new.
+
+Structured findings:
 
 ### What's working well
-[Specific bullet points — not generic praise]
+[Specific bullet points]
 
 ### Gaps and improvements
 [Each with a one-line reason why it matters]
 
 ### Quick wins
-[Concrete, specific changes that can be applied immediately]
+[Concrete changes that can be applied immediately]
 
----
+## Step 4: Update .claude/knowledge.md
 
-If running standalone, offer to apply the quick wins immediately after presenting the report.
+Write the full updated knowledge base to `.claude/knowledge.md`. Use this exact format:
 
-If running as a sub-agent for /onboarding, return the report only — the orchestrator will apply changes.
+```
+# Knowledge Base
+
+_Last updated: [today's date]_
+
+## Summary
+[One or two sentences describing the overall state of the setup — this is what the SessionStart hook surfaces]
+
+## Latest findings
+
+### What's working well
+[bullet list]
+
+### Gaps and improvements
+[bullet list]
+
+### Quick wins
+[bullet list]
+
+## What changed since last review
+[bullet list of anything new compared to previous run, or "First run — no previous baseline" if applicable]
+
+## Run history
+| Date | Trigger | Summary |
+|------|---------|---------|
+| [today] | [manual/scheduled] | [one-line summary] |
+[preserve any previous rows here]
+```
+
+## Step 5: Present and offer to apply
+
+Show the user the findings. Then:
+- If running standalone: offer to apply the quick wins immediately
+- If running as a sub-agent for /onboarding: return the report — the orchestrator will apply changes
