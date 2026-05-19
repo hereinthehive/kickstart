@@ -40,60 +40,58 @@ Your goal here is not to fill out a form — it's to understand how this person 
 
 Have a real conversation. Ask one or two questions at a time, listen to the answers, and follow up on anything interesting. The richer the picture, the better the setup you can build.
 
-**Start here — ground everything in the project first**
+**Start here — understand the project as a human thing, not a technical one**
 
-Before asking about workflow, establish what the project actually is and what the user is trying to achieve. Never skip this, even if CLAUDE.md exists — file content is not the same as understanding.
+Before anything about workflow, tools, or implementation, understand what this project actually *is*. This is proper discovery — the kind of conversation you'd have before ever opening a code editor.
 
-- What is this project? What problem does it solve, or what are you building?
-- What are you personally trying to achieve with it — what does success look like?
-- What stage is it at? Just starting, actively being built, or maintaining something existing?
-- Who is it for — just you, a team, customers?
+- What's this project about? What's the topic or domain?
+- Who is it for — who's the audience or user?
+- What problem does it solve for them, or what does it help them do?
+- What does success look like — how will you know it's working?
+- What stage is it at — a fresh idea, something being actively built, or maintaining something that exists?
 
-Only once you have real answers to these should you move into workflow discovery. The project context shapes everything else.
+Listen and explore. Ask follow-ups. Understand the project as a thing that exists in the world before thinking about how it's built or how Claude can help.
 
-**Establish experience level early** — within the first exchange, get a clear read on how technical this person is and how familiar they are with Claude Code. Everything after that should match their level:
+**Only once you have a real picture of the project, move to working style:**
 
-- **Non-technical / new**: plain language only. No mention of hooks, MCP servers, skills, permissions, or settings. Ask about what they do, what's annoying, what they wish was easier. You translate their answers into technical decisions invisibly.
-- **Some experience**: light technical framing is fine, but still lead with outcomes not implementation.
-- **Power user**: can go deep — ask about MCP servers, hook types, specific permissions, agent patterns.
-
-Adapt mid-conversation. If someone says "I'm not really technical" partway through, shift register immediately and don't go back.
-
-**What you're trying to understand:**
-
-*Their workflow* — ask in their language
-- What does a typical session look like for you? What do you usually start with?
-- Are there things you find yourself doing over and over?
+- How do you prefer to work on it — in long focused sessions or shorter bursts?
+- What does a typical session look like? Where do you usually start?
+- Are there things you find yourself doing repeatedly?
 - Is there anything you have to remind me of at the start of every conversation?
-
-*Their frustrations and wishes*
-- What feels slow or repetitive about how you work right now?
-- Is there anything you wish just happened automatically?
+- What feels slow or frustrating right now?
 - What would make the biggest difference to your day-to-day?
 
-*Their context*
-- Working alone or with others? If with others — does the setup need to work for them too?
-- What other tools are involved in your work? (however they'd naturally describe them — don't prompt with technical names)
-- Are there parts of the process — like reviewing, testing, or sharing — where you'd want more help?
+**Then context about people and tools — still in plain terms:**
 
-*Their preferences*
-- How do you like me to communicate — brief and to the point, or explain as I go?
+- Working alone or with others?
+- What other tools are involved? (however they'd naturally describe them)
+- Are there parts of the process — reviewing, testing, sharing — where you'd want more help?
 
-*Their constraints and hard stops* — ask carefully, in plain terms
+**Establish experience level naturally** — it usually becomes obvious from how they talk. If not, ask directly but gently. Once you know, match your language:
+
+- **Non-technical / new**: plain language only. No mention of hooks, MCP servers, skills, permissions, or settings. Translate their answers into technical decisions invisibly.
+- **Some experience**: light technical framing is fine, but lead with outcomes not implementation.
+- **Power user**: can go deep on specifics.
+
+Adapt mid-conversation if their level becomes clearer. If someone says "I'm not really technical", shift register immediately.
+
+**Finally, constraints — what they don't want:**
+
+Ask this after you understand the project and how they work. It lands better when they can see why it matters.
+
 - Are there things you'd never want me to do without you explicitly asking?
 - Any files, folders, or parts of the project I should treat as hands-off?
 - Has anything gone wrong before that you'd want to make sure doesn't happen again?
 - Any rules — from your team, your company, or just your own preferences — I should always follow?
 
-**As they talk, actively listen for:**
+**Throughout, listen for:**
 - Repeated sequences → candidate for a custom command
-- Things they re-explain each session → candidate for project memory or a session hook
-- Handoff points (to CI, to teammates, to review) → candidate for an automated workflow
-- Tools they mention by any name → may map to integrations worth setting up
-- Frustrations → problems worth solving with automation
+- Things they re-explain each session → candidate for project memory
+- Frustrations → problems worth solving
+- Handoff points → candidate for an automated workflow
 - Hard limits → constraints to enforce, not just note
 
-Don't try to cover everything in one go. If they give a rich answer, dig in. The goal is a complete picture of how they work — not a completed checklist.
+Don't rush. If they give a rich answer, explore it. The goal is a genuine understanding of the project and the person — not a completed checklist.
 
 ## Phase 3: Consult the curator on methodology
 
