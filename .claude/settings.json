@@ -1,6 +1,16 @@
 {
   "permissions": {
-    "allow": ["Read", "Bash(git *)", "Bash(ls *)", "Bash(wc *)"]
+    "allow": [
+      "Read",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(find *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npx *)",
+      "Bash(node *)"
+    ]
   },
   "hooks": {
     "SessionStart": [
