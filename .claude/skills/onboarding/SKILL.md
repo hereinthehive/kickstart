@@ -30,13 +30,24 @@ Silently read all available context before asking a single question:
 **User preferences (user-level, not project-level):**
 - Read `~/.claude/CLAUDE.md` if it exists — this contains preferences this user has set across projects
 
-Note what you already know and what gaps remain before moving to Phase 2.
+Use this to orient yourself — not to skip questions. File content tells you what was written down before; it doesn't tell you what the user actually wants or how they work. Always confirm project purpose and goals directly with the user.
 
 ## Phase 2: Discovery interview
 
 Your goal here is not to fill out a form — it's to understand how this person actually works so you can identify where custom skills or agents would genuinely help them. Think of this as a consultant's discovery session.
 
 Have a real conversation. Ask one or two questions at a time, listen to the answers, and follow up on anything interesting. The richer the picture, the better the setup you can build.
+
+**Start here — ground everything in the project first**
+
+Before asking about workflow, establish what the project actually is and what the user is trying to achieve. Never skip this, even if CLAUDE.md exists — file content is not the same as understanding.
+
+- What is this project? What problem does it solve, or what are you building?
+- What are you personally trying to achieve with it — what does success look like?
+- What stage is it at? Just starting, actively being built, or maintaining something existing?
+- Who is it for — just you, a team, customers?
+
+Only once you have real answers to these should you move into workflow discovery. The project context shapes everything else.
 
 **Establish experience level early** — within the first exchange, get a clear read on how technical this person is and how familiar they are with Claude Code. Everything after that should match their level:
 
