@@ -82,8 +82,11 @@ Write the full updated knowledge base to `.claude/knowledge.md`. Use this exact 
 
 _Last updated: [today's date]_
 
+## In plain words
+[A friendly 2–3 sentence summary anyone can understand. Lead with overall health: "Your setup is healthy" or "A few small things need attention". If there are quick wins, end with: "I can fix these for you if you'd like — just say yes." This section is for non-technical users; avoid jargon entirely.]
+
 ## Summary
-[One or two sentences describing the overall state of the setup — this is what the SessionStart hook surfaces]
+[One or two sentences describing the overall state of the setup — this is what the SessionStart hook surfaces. Slightly more technical than "In plain words" but still concise.]
 
 ## Latest findings
 
@@ -91,10 +94,10 @@ _Last updated: [today's date]_
 [bullet list]
 
 ### Gaps and improvements
-[bullet list]
+[bullet list — each item one-line reason why it matters]
 
 ### Quick wins
-[bullet list]
+[bullet list — concrete, applicable now]
 
 ## What changed since last review
 [bullet list of anything new compared to previous run, or "First run — no previous baseline" if applicable]
@@ -108,6 +111,6 @@ _Last updated: [today's date]_
 
 ## Step 5: Present and offer to apply
 
-Show the user the findings. Then:
-- If running standalone: offer to apply the quick wins immediately
+Lead with the "In plain words" summary — that's what most users will read. Only show the detailed findings if the user asks, or if they're a power user who would want them. Then:
+- If running standalone: offer to apply the quick wins immediately, in plain language ("I found 2 small improvements — want me to apply them?")
 - If running as a sub-agent for /onboarding: return the report — the orchestrator will apply changes
