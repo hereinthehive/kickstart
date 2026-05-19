@@ -4,7 +4,7 @@ A personal portfolio site showcasing design work. Built with Next.js and Tailwin
 
 ## Project overview
 
-This is a static-style portfolio site. Pages include a home/hero, project gallery, individual project case studies, and a contact section. The goal is clean, image-forward design with fast load times.
+A portfolio site for a UI designer. Pages include a home/hero, project gallery, individual project case studies, and a contact section. The aesthetic is clean and minimal — lots of whitespace, neutral palette, typography-led. Fast load times matter since work is presented as images/screenshots.
 
 ## Tech stack
 
