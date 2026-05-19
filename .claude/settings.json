@@ -1,11 +1,14 @@
 {
+  "permissions": {
+    "allow": ["Read", "Bash(git *)", "Bash(ls *)"]
+  },
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'ONBOARDING NOT COMPLETE: This project has not been configured for Claude Code. Please tell the user to run /onboarding before starting work — it will set up CLAUDE.md, permissions, and hooks tailored to this project.'; else echo 'Project context loaded.'; cat CLAUDE.md; fi"
+            "command": "if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'ONBOARDING NOT COMPLETE: This project has not been configured for Claude Code. Tell the user to run /onboarding before starting work.'; else echo \"Branch: $(git branch --show-current 2>/dev/null || echo 'n/a')\"; echo \"Status: $(git status --short 2>/dev/null | head -5 || echo 'clean')\"; echo \"Last commit: $(git log --oneline -1 2>/dev/null || echo 'none')\"; fi"
           }
         ]
       }

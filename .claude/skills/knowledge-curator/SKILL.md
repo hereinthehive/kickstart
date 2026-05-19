@@ -1,5 +1,6 @@
 ---
 description: Review the current Claude Code setup against latest best practices and documentation — identifies gaps, outdated patterns, and missed features
+disable-model-invocation: true
 allowed-tools: Read Bash WebSearch WebFetch
 ---
 

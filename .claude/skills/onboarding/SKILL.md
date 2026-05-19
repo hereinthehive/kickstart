@@ -45,7 +45,7 @@ The persistent project knowledge file. Include:
 Configure for this project:
 - Permissions: allow commands this project genuinely needs (build tools, package managers, test runners)
 - SessionStart hook: a command that outputs key context to orient Claude at the start of each session
-- A weekly /knowledge-curator check using the hooks or schedule system if available
+- A weekly /knowledge-curator check: use the `schedule` block in settings.json (fires automatically on claude.ai web; CLI users should use `/loop weekly /knowledge-curator` or a cron job instead — note this in the handoff)
 - Additional hooks if the workflow calls for them (e.g. PostToolUse for auto-linting)
 
 ### Project-specific skills
@@ -61,12 +61,15 @@ Read the curator's report and apply any quick wins before the handoff.
 
 ## Phase 5: Handoff
 
+Before handing off, rewrite CLAUDE.md entirely with real project content from Phases 1–2. Remove all template scaffolding (the "Getting Started", "Available Commands", and "How it works" sections from the starter) — those belong in README.md, not in the project knowledge file Claude reads every session.
+
 Give the user a clear, friendly summary in plain language:
 
 - **What was created** — bullet list of files created or changed
 - **What to do now** — anything requiring action (restart session to activate hooks, install a tool, etc.)
 - **What to expect** — how Claude will behave differently going forward
 - **Commands available** — list any /skills they can use
-- **To revisit** — they can run /onboarding again anytime, and /knowledge-curator to check for best practice updates
+- **Weekly review** — on claude.ai this runs automatically; on CLI/IDE, run `/knowledge-curator` manually or use `/loop weekly /knowledge-curator`
+- **To revisit** — they can run /onboarding again anytime
 
 Keep it non-technical where possible. If a restart is needed, say so clearly and explain what it activates.
