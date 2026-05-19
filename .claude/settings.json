@@ -10,5 +10,11 @@
         ]
       }
     ]
-  }
+  },
+  "schedule": [
+    {
+      "command": "/knowledge-curator",
+      "interval": "weekly"
+    }
+  ]
 }

@@ -21,4 +21,4 @@ Run `/onboarding` to configure this project for your needs. It will:
 
 **Onboarding** is the orchestrator — it interviews you, reads your project, builds the structure, then calls the **Knowledge Curator** to review everything before handing off to you.
 
-The **Knowledge Curator** can also run independently to audit your setup as Claude Code evolves (new features, changed best practices, etc.). Pair it with `/schedule` to run it automatically on a cadence.
+The **Knowledge Curator** can also run independently to audit your setup as Claude Code evolves (new features, changed best practices, etc.). It runs automatically on a weekly schedule to keep your setup current.
