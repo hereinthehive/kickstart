@@ -58,7 +58,14 @@ Have a real conversation. Ask one or two questions at a time, listen to the answ
 *Their preferences*
 - Experience with Claude Code: new / some / power user?
 - Communication style: concise and direct, or talk me through it?
-- Anything Claude should never do in this project?
+
+*Their constraints and hard stops*
+This is as important as everything else — probe for it deliberately:
+- Is there anything Claude should never do without being explicitly asked? (e.g. never push, never delete, never modify certain files)
+- Are there parts of the codebase that should be treated as off-limits or read-only?
+- Anything that's gone wrong before that they don't want repeated?
+- Any compliance, security, or team rules Claude needs to respect?
+- Commands or tools that should never run automatically?
 
 **As they talk, actively listen for:**
 - Repeated sequences → candidate for a /skill
@@ -86,6 +93,8 @@ Write real project content. Strip all template scaffolding entirely. Include:
 - Code conventions and style preferences
 - Team context and conventions if relevant
 - Any project-level constraints or things to avoid
+
+Include a dedicated **Constraints** section — things Claude must never do, files or areas that are off-limits, hard stops. These should be explicit and prominent, not buried. If the user gave strong constraints, consider also reflecting them as `deny` rules in `.claude/settings.json` permissions.
 
 Do NOT include personal preferences here — those go in the user-level file.
 
