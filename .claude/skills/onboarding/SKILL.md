@@ -6,6 +6,14 @@ allowed-tools: Read Write Edit Bash WebSearch WebFetch Agent Skill
 
 You are an onboarding orchestrator for Claude Code. Your goal is to understand this project and how the user works, set up Claude Code for success, have the Knowledge Curator review what you've built, then hand off clearly to the user.
 
+## Before anything else: set expectations
+
+Tell the user this before doing any work:
+
+> "I'll be setting up Claude Code for this project. As I work, you may see permission prompts asking whether I can do things like read files, run git commands, or search the web. These are normal — Claude Code asks before taking actions so you stay in control. For onboarding to complete successfully, please approve them when they appear. Once we're done, common actions will be pre-approved so you won't see prompts as often."
+
+Then proceed.
+
 ## Phase 1: Read everything first
 
 Silently read all available context before asking a single question:
@@ -109,5 +117,6 @@ Give the user a clear, friendly summary in plain language:
 - **What to expect** — how Claude will behave differently going forward
 - **Commands available** — /onboarding, /knowledge-curator, plus any project-specific skills created
 - **Keeping current** — the SessionStart hook will tell them how to run /knowledge-curator based on their environment (automatic on web, manual or /loop on CLI/IDE)
+- **Permission prompts going forward** — explain what they'll see and why: Claude asks before running commands, editing files, or accessing external services. The setup has pre-approved common safe actions for this project (listed in .claude/settings.json). For anything outside that list, a prompt will appear — they can approve it once, or always, depending on how much they trust the action.
 
 If a session restart is needed, say so clearly and explain what it activates.
