@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["Read", "Bash(git *)", "Bash(ls *)"]
+    "allow": ["Read", "Bash(git *)", "Bash(ls *)", "Bash(wc *)"]
   },
   "hooks": {
     "SessionStart": [
@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'ONBOARDING NOT COMPLETE: This project has not been configured for Claude Code. Tell the user to run /onboarding before starting work.'; else echo \"Branch: $(git branch --show-current 2>/dev/null || echo 'n/a')\"; echo \"Status: $(git status --short 2>/dev/null | head -5 || echo 'clean')\"; echo \"Last commit: $(git log --oneline -1 2>/dev/null || echo 'none')\"; fi"
+            "command": "if [ \"${CLAUDE_CODE_REMOTE}\" = \"true\" ]; then echo 'Environment: claude.ai web (weekly /knowledge-curator runs automatically)'; else echo 'Environment: CLI/IDE (run /knowledge-curator manually or use /loop weekly /knowledge-curator)'; fi; if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'ONBOARDING NOT COMPLETE: Run /onboarding before starting work.'; else echo \"Branch: $(git branch --show-current 2>/dev/null || echo 'n/a')\"; echo \"Status: $(git status --short 2>/dev/null | head -5 || echo 'clean')\"; echo \"Last commit: $(git log --oneline -1 2>/dev/null || echo 'none')\"; fi; if [ -n \"$CLAUDE_ENV_FILE\" ]; then echo \"export CLAUDE_CODE_REMOTE=${CLAUDE_CODE_REMOTE}\" >> \"$CLAUDE_ENV_FILE\"; fi"
           }
         ]
       }

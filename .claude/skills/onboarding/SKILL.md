@@ -45,7 +45,7 @@ The persistent project knowledge file. Include:
 Configure for this project:
 - Permissions: allow commands this project genuinely needs (build tools, package managers, test runners)
 - SessionStart hook: a command that outputs key context to orient Claude at the start of each session
-- A weekly /knowledge-curator check: use the `schedule` block in settings.json (fires automatically on claude.ai web; CLI users should use `/loop weekly /knowledge-curator` or a cron job instead — note this in the handoff)
+- A weekly /knowledge-curator check: use the `schedule` block in settings.json (fires automatically on claude.ai web; the SessionStart hook will tell the user how to run it in their environment)
 - Additional hooks if the workflow calls for them (e.g. PostToolUse for auto-linting)
 
 ### Project-specific skills
@@ -69,7 +69,6 @@ Give the user a clear, friendly summary in plain language:
 - **What to do now** — anything requiring action (restart session to activate hooks, install a tool, etc.)
 - **What to expect** — how Claude will behave differently going forward
 - **Commands available** — list any /skills they can use
-- **Weekly review** — on claude.ai this runs automatically; on CLI/IDE, run `/knowledge-curator` manually or use `/loop weekly /knowledge-curator`
-- **To revisit** — they can run /onboarding again anytime
+- **To revisit** — they can run /onboarding again anytime; the SessionStart hook will tell them how to keep the setup current based on their environment
 
 Keep it non-technical where possible. If a restart is needed, say so clearly and explain what it activates.
