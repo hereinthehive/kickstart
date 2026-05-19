@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'ONBOARDING NOT COMPLETE: This project has not been configured for Claude Code. Please tell the user to run /onboarding before starting work — it will set up CLAUDE.md, permissions, and hooks tailored to this project.'; else echo 'Project context loaded.'; cat CLAUDE.md; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
