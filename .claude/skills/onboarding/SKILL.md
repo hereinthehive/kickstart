@@ -38,43 +38,49 @@ Your goal here is not to fill out a form — it's to understand how this person 
 
 Have a real conversation. Ask one or two questions at a time, listen to the answers, and follow up on anything interesting. The richer the picture, the better the setup you can build.
 
+**Establish experience level early** — within the first exchange, get a clear read on how technical this person is and how familiar they are with Claude Code. Everything after that should match their level:
+
+- **Non-technical / new**: plain language only. No mention of hooks, MCP servers, skills, permissions, or settings. Ask about what they do, what's annoying, what they wish was easier. You translate their answers into technical decisions invisibly.
+- **Some experience**: light technical framing is fine, but still lead with outcomes not implementation.
+- **Power user**: can go deep — ask about MCP servers, hook types, specific permissions, agent patterns.
+
+Adapt mid-conversation. If someone says "I'm not really technical" partway through, shift register immediately and don't go back.
+
 **What you're trying to understand:**
 
-*Their workflow*
-- Walk me through a typical session — what do you usually start with, what does a normal chunk of work look like, how do you know when you're done?
-- Are there sequences you repeat often? (e.g. write → test → PR, or pull → review overnight changes → plan today's work)
-- What do you currently have to look up, remember, or explain to Claude every time?
+*Their workflow* — ask in their language
+- What does a typical session look like for you? What do you usually start with?
+- Are there things you find yourself doing over and over?
+- Is there anything you have to remind me of at the start of every conversation?
 
 *Their frustrations and wishes*
-- What feels slow or repetitive in how you work right now?
-- Is there anything you wish Claude just knew without you having to tell it?
+- What feels slow or repetitive about how you work right now?
+- Is there anything you wish just happened automatically?
 - What would make the biggest difference to your day-to-day?
 
 *Their context*
-- Solo or team? If team — do others need to follow the same conventions, or is this personal setup?
-- What tools are in the loop beyond the editor? (CI, deployment, issue tracker, Slack, MCP servers, etc.)
-- How do you handle code review, deployment, testing — are those things you'd want Claude more involved in?
+- Working alone or with others? If with others — does the setup need to work for them too?
+- What other tools are involved in your work? (however they'd naturally describe them — don't prompt with technical names)
+- Are there parts of the process — like reviewing, testing, or sharing — where you'd want more help?
 
 *Their preferences*
-- Experience with Claude Code: new / some / power user?
-- Communication style: concise and direct, or talk me through it?
+- How do you like me to communicate — brief and to the point, or explain as I go?
 
-*Their constraints and hard stops*
-This is as important as everything else — probe for it deliberately:
-- Is there anything Claude should never do without being explicitly asked? (e.g. never push, never delete, never modify certain files)
-- Are there parts of the codebase that should be treated as off-limits or read-only?
-- Anything that's gone wrong before that they don't want repeated?
-- Any compliance, security, or team rules Claude needs to respect?
-- Commands or tools that should never run automatically?
+*Their constraints and hard stops* — ask carefully, in plain terms
+- Are there things you'd never want me to do without you explicitly asking?
+- Any files, folders, or parts of the project I should treat as hands-off?
+- Has anything gone wrong before that you'd want to make sure doesn't happen again?
+- Any rules — from your team, your company, or just your own preferences — I should always follow?
 
 **As they talk, actively listen for:**
-- Repeated sequences → candidate for a /skill
-- Things they re-explain each session → candidate for CLAUDE.md or a SessionStart hook
-- Handoff points (to CI, to teammates, to review) → candidate for an agent
-- Tools they mention → MCP servers to suggest
+- Repeated sequences → candidate for a custom command
+- Things they re-explain each session → candidate for project memory or a session hook
+- Handoff points (to CI, to teammates, to review) → candidate for an automated workflow
+- Tools they mention by any name → may map to integrations worth setting up
 - Frustrations → problems worth solving with automation
+- Hard limits → constraints to enforce, not just note
 
-Don't try to cover everything in one go. If they give a rich answer, dig in. If they're new to Claude Code, keep it lighter and focus on what they're trying to accomplish rather than asking about features they may not know exist.
+Don't try to cover everything in one go. If they give a rich answer, dig in. The goal is a complete picture of how they work — not a completed checklist.
 
 ## Phase 3: Consult the curator on methodology
 
