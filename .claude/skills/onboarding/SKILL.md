@@ -357,7 +357,30 @@ If hooks were added or changed in Phase 4, mention this briefly:
 
 > *"Some of what we set up needs a fresh start to take effect. Close and reopen Claude Code when you get a chance — no rush."*
 
-**5. Light touch on prompts**
+**5. Plugin recommendations (conditional)**
+
+If Phase 2 discovery signaled that the user does planning or project management — specifically, any of:
+- Q5 (session shape) includes "planning"
+- Q10 (kind of help wanted) includes "planner"
+- Q11 (areas to improve) includes "structuring projects"
+- Free-text answers mentioned planning, specs, architecture, or "thinking it through first"
+
+— surface this recommendation, in plain language:
+
+> *"One more thing worth knowing about. There's an optional add-on called Superpowers that fits well with how you said you like to work. It adds a few skills for thinking through what to build before building it — like brainstorming an idea or writing out a step-by-step plan. If you want to try it, copy and run these:*
+>
+> ```
+> /plugin install superpowers
+> /reload-plugins
+> ```
+>
+> *Totally optional — you can always add it later by asking me."*
+
+Only emit this when the trigger fires. If discovery surfaced no planning signal, skip the section entirely.
+
+DO NOT recommend other plugins by default. Only Superpowers, only on this signal. Other plugins (e.g., agent-skills) have overlapping behavior with Kickstart's own skills and should not be suggested unless the user explicitly asks for engineering-discipline tooling.
+
+**6. Light touch on prompts**
 
 If they'll see permission prompts (because they're new to Claude Code or because safety-net commands need approvals), give them ONE sentence:
 
@@ -365,7 +388,7 @@ If they'll see permission prompts (because they're new to Claude Code or because
 
 Don't list which permissions exist. Don't mention .claude/settings.json. Don't explain what a hook is.
 
-**6. The friendly close**
+**7. The friendly close**
 
 End with one warm sentence that puts the ball in their court without pressure:
 
