@@ -172,16 +172,16 @@ If the user explicitly says "I don't know" or "just pick something" or "skip it"
 
 ## Phase 3: Consult the curator on methodology
 
-Invoke the curator subagent (lives at `.claude/agents/curator.md`) via the Agent tool:
+Invoke the curator subagent via the Agent tool:
 
 - subagent_type: `curator`
-- prompt: "I'm running onboarding for a project. Based on current Claude Code best practices, recommend the right CLAUDE.md structure, hook patterns, and skill conventions for this project. Search the current Claude Code documentation as part of your audit. Project context: <summary from Phase 2 interview, including project type, user experience level, working situation, and any constraints>."
+- prompt: "I'm about to run onboarding for a project. Run your two-step pipeline: refresh `.claude/knowledge.md` from current docs, then write `.claude/curator-recommendations.md` based on what's already in this project. Project context for Step 2: <summary from Phase 2 interview, including project type, user experience level, working situation, and any constraints>."
 
-**Persist the findings.** When the curator returns its structured block, write it verbatim to `.claude/curator-recommendations.md` (overwriting any previous file). Include a header line: `# Curator recommendations (Phase 3 — methodology) — [today's date]`. This gives the user a visible artifact and lets future onboarding runs compare against the previous recommendation set.
+**The curator writes both files itself.** It writes `.claude/knowledge.md` (project-agnostic best practices baseline) and `.claude/curator-recommendations.md` (project-specific gap analysis). You don't need to write either file in this phase — just invoke the curator and wait for its returned summary.
 
-**Tell the user.** Surface a 2–3 sentence plain-language summary of what the curator recommended. Example: *"The curator checked current Claude Code docs. It recommended A, B, and C for your setup. Full details in `.claude/curator-recommendations.md` if you want to see."*
+**Tell the user.** Surface a 2-3 sentence plain-language summary of what the curator recommended. Don't list file paths or technical details. Example: *"I checked the latest Claude Code best practices. A few small things would tighten this up — I'll fold those in as I build."*
 
-Use the curator's response as your build guide for Phase 4. If the subagent call fails (network error, timeout, etc.), fall back to applying generally-known best practices, tell the user the curator wasn't reachable, and skip writing the file.
+Use the curator's recommendations as your build guide for Phase 4. If the subagent call fails (network error, timeout), fall back to applying generally-known best practices and tell the user the curator wasn't reachable.
 
 ## Phase 4: Build the setup
 
@@ -283,35 +283,16 @@ CLAUDE.md is often the first prose a non-technical user sees in their own setup.
 
 ## Phase 5: Curator review
 
-Invoke the curator subagent again via the Agent tool:
+Invoke the curator subagent again:
 
 - subagent_type: `curator`
-- prompt: "I just finished onboarding setup for this project. Review what was actually built (CLAUDE.md, .claude/settings.json, .claude/skills/, .claude/agents/) against current best practices. Search current Claude Code docs as part of your review. Report what's healthy, what's missing, and any quick wins."
+- prompt: "Onboarding setup is complete. Re-run your two-step pipeline: refresh `.claude/knowledge.md` and write `.claude/curator-recommendations.md` based on what's now in this project. Focus on whether what was built matches current best practices."
 
-This pass reviews what was actually built rather than advising on methodology.
+The curator writes both files itself. Wait for its returned summary.
 
-**Persist the findings.** Write the curator's structured block to `.claude/knowledge.md` (overwriting any previous file) with this exact format:
+**Tell the user.** Surface a plain-language summary of what the curator found in the review pass. If there are quick wins, ask whether to apply them now before moving to Phase 6. Example: *"All looks good. There's one small tweak suggested — want me to apply it?"*
 
-```
-# Knowledge Base
-
-_Last updated: [today's date]_
-
-## Summary
-[1-2 sentence overall verdict from the curator's findings]
-
-## Latest findings
-[paste the curator's structured block here verbatim]
-
-## Run history
-| Date | Trigger | Summary |
-|------|---------|---------|
-| [today] | onboarding (Phase 5) | [one-line summary] |
-```
-
-**Tell the user.** Surface a plain-language summary of what the curator found. If there are quick wins, ask whether to apply them now before moving to Phase 6.
-
-If the subagent call fails, skip the file write and tell the user the review couldn't run — they can run `/update` later to get one.
+If the subagent call fails, skip and tell the user the review couldn't run — they can run `/update` later.
 
 ## Phase 6: Write the onboarding log
 
