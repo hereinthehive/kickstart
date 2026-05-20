@@ -61,22 +61,24 @@ Example openers (use `AskUserQuestion`, not free-text prompts):
 
 **"Show me, don't ask me" — if the user struggles, switch to defaults.** If someone answers "I don't know" or seems unsure on two questions in a row, stop interviewing. Say: *"No problem — I'll make sensible defaults based on what's already in the project, and you can tell me to change anything later."* Then proceed to Phase 3 with what you have.
 
-**Start here — confirm what you already learned, don't re-interrogate**
+**Start here — detect template scaffolding vs. real project content**
 
-In Phase 1 you read CLAUDE.md, README.md, and the project's manifest. If those files already make the project's purpose, stage, and audience clear, do NOT ask the user to restate them. That's interrogation, not grounding.
+In Phase 1 you read CLAUDE.md and README.md. Before doing anything else, decide which of these you have:
 
-Instead, present a confident summary and ask for confirmation. Example:
+1. **Template scaffolding.** CLAUDE.md begins with `# Kickstart` and describes the starter template generically (mentions "/onboarding", "starter template", "fork it"). README.md says "A Claude Code starter template with built-in onboarding...". This means the user just forked Kickstart and is starting fresh. The content describes the *template*, not the user's project. Do NOT treat any of this as project information. Move directly into the project-discovery questions below, and plan to OVERWRITE this CLAUDE.md with the user's real project content in Phase 4.
 
-> "From what I read, this looks like a [Claude Code starter template / Node.js web app / Python data pipeline / etc.] that's [actively being built / maintained / just starting]. You're working on it [alone / with a team / for customers]. Sound right, or am I off on anything?"
+2. **Real project content.** CLAUDE.md describes an actual project — a specific codebase, problem, or team. README.md isn't the Kickstart template README. This means onboarding has been run before, or the project was set up another way. Present a confident summary of what you understood and ask the user to confirm or correct it — don't re-interrogate. Example: *"From what I read, this looks like a Python data pipeline you're actively building for an internal team. Sound right, or am I off?"*
 
-If the user confirms, move on. If they correct, accept the correction and move on. Only ask the open questions below when the project files are silent or genuinely ambiguous:
+**Never ask "are you developing the Kickstart template itself or using it for a real project?"** Anyone running `/onboarding` from a fork is using it for a real project. That distinction isn't real for the user — it's only real for template maintainers, who don't run `/onboarding` on their own work.
+
+In the template-scaffolding case, ask the project-discovery questions to fill in what the scaffolding doesn't tell you:
 
 - What is this project? What problem does it solve, or what are you building?
 - What are you personally trying to achieve with it — what does success look like?
 - What stage is it at?
 - Who is it for?
 
-The project context shapes everything else — but it only takes one confirmation, not four interrogation questions, when the files have already told you most of it.
+In the real-project case, only ask these if the user's confirmation reveals genuine ambiguity.
 
 **Establish experience level early** — within the first exchange, get a clear read on how technical this person is and how familiar they are with Claude Code. Everything after that should match their level:
 
