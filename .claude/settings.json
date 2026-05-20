@@ -1,6 +1,16 @@
 {
   "permissions": {
-    "allow": ["Read", "Bash(git *)", "Bash(ls *)", "Bash(wc *)"]
+    "allow": [
+      "Read",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(cat *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(date *)",
+      "Agent"
+    ]
   },
   "hooks": {
     "SessionStart": [
@@ -8,16 +18,20 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ \"${CLAUDE_CODE_REMOTE}\" = \"true\" ]; then echo 'Tip: I check your setup every week automatically. Run /knowledge-curator anytime for a fresh review.'; else echo 'Tip: run /knowledge-curator weekly to keep your setup current (or use /loop weekly /knowledge-curator to automate it).'; fi; if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'Setup not finished yet — run /onboarding to get started.'; else echo \"Branch: $(git branch --show-current 2>/dev/null || echo 'n/a')\"; echo \"Status: $(git status --short 2>/dev/null | head -5 || echo 'clean')\"; echo \"Last commit: $(git log --oneline -1 2>/dev/null || echo 'none')\"; fi; if [ -f .claude/knowledge.md ]; then echo ''; echo '--- What I know about your setup ---'; awk '/## In plain words/{flag=1; next} /^## /{flag=0} flag' .claude/knowledge.md | sed '/^$/d' | head -3; if [ -z \"$(awk '/## In plain words/{flag=1; next} /^## /{flag=0} flag' .claude/knowledge.md | sed '/^$/d')\" ]; then grep -A3 '## Summary' .claude/knowledge.md | tail -n +2 | head -3; fi; echo \"(last checked: $(grep '_Last updated:' .claude/knowledge.md | head -1 | sed 's/.*: //;s/_//'))\"; fi; if [ -n \"$CLAUDE_ENV_FILE\" ]; then echo \"export CLAUDE_CODE_REMOTE=${CLAUDE_CODE_REMOTE}\" >> \"$CLAUDE_ENV_FILE\"; fi"
+            "command": "if [ ! -f CLAUDE.md ] || [ $(wc -c < CLAUDE.md) -lt 50 ]; then echo 'Setup not finished yet — run /onboarding to get started.'; else echo \"Branch: $(git branch --show-current 2>/dev/null || echo 'n/a')\"; echo \"Status: $(git status --short 2>/dev/null | head -5 || echo 'clean')\"; echo \"Last commit: $(git log --oneline -1 2>/dev/null || echo 'none')\"; fi; if [ -f .claude/skills/undo/SKILL.md ]; then mkdir -p .claude && date +%s > .claude/.session-start; fi; if [ -f .claude/last-session.md ]; then echo ''; echo '--- Where we left off ---'; awk '/## Next time, start with/{flag=1; next} /^## /{flag=0} flag' .claude/last-session.md | sed '/^$/d' | head -2; AGE_DAYS=$(( ( $(date +%s) - $(stat -f %m .claude/last-session.md 2>/dev/null || stat -c %Y .claude/last-session.md 2>/dev/null || echo 0) ) / 86400 )); if [ \"$AGE_DAYS\" -gt 1 ]; then echo \"(recap is $AGE_DAYS days old)\"; fi; fi; if [ -f .claude/.wrap-pending ]; then echo ''; echo '--- Pending recap ---'; echo 'Last session ended without a recap. Run /wrap to build one retroactively from git activity.'; fi; if [ -f .claude/update-report.md ]; then echo ''; echo '--- Last audit summary ---'; awk '/## In plain words/{flag=1; next} /^## /{flag=0} flag' .claude/update-report.md | sed '/^$/d' | head -3; fi; echo ''; echo 'Tip: run /loop weekly /update once to keep your setup current automatically.'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "TRANSCRIPT=\"${CLAUDE_TRANSCRIPT_PATH:-}\"; if [ -z \"$TRANSCRIPT\" ] || [ ! -f \"$TRANSCRIPT\" ]; then exit 0; fi; SUBSTANTIVE=$(grep -c '\"name\":\"\\(Edit\\|Write\\|MultiEdit\\|NotebookEdit\\)\"' \"$TRANSCRIPT\" 2>/dev/null || echo 0); BASH_OPS=$(grep -oE '\"name\":\"Bash\".*?\"command\":\"(git|npm|pnpm|yarn|cargo|make|pytest|sed -i|mv |cp |rm )[^\"]*\"' \"$TRANSCRIPT\" 2>/dev/null | wc -l); TOTAL=$((SUBSTANTIVE + BASH_OPS)); if [ \"$TOTAL\" -ge 5 ]; then FILES=$(grep -oE '\"file_path\":\"[^\"]+\"' \"$TRANSCRIPT\" 2>/dev/null | sed 's/\"file_path\":\"//;s/\"$//' | sort -u | tr '\\n' ',' | sed 's/,$//'); mkdir -p .claude; printf 'SESSION_END=%s\\nSUBSTANTIVE_TURNS=%s\\nFILES_TOUCHED=%s\\n' \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \"$TOTAL\" \"$FILES\" > .claude/.wrap-pending; fi"
           }
         ]
       }
     ]
-  },
-  "schedule": [
-    {
-      "command": "/knowledge-curator",
-      "interval": "weekly"
-    }
-  ]
+  }
 }
