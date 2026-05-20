@@ -42,7 +42,15 @@ Silently read all available context before asking a single question:
 **Environment detection:**
 - Run `git --version >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1` to determine git state. Record state for Phase 2: (1) no git installed, (2) git installed but not a repo, (3) git installed + repo.
 
-After reading, before asking anything, tell the user what you found — briefly and in plain language. For example: "I can see this is a Node.js project with a test suite and a CI config. I also found an existing CLAUDE.md with some preferences already set." This is a given — the user should always know what you already have so they don't re-explain things you already know, and so they can correct anything you've misread.
+After reading, before asking anything, give the user ONE or TWO warm sentences about what you found. Not a file inventory, not a bulleted list, not a tour of `.claude/` internals.
+
+**For a fresh Kickstart fork** (CLAUDE.md is the template scaffolding): something like *"I can see this is a fresh Kickstart project — let's get started."* That's it. No mention of skills, agents, hooks, or settings — those are infrastructure the user doesn't need to think about.
+
+**For a project with real CLAUDE.md content**: a one-sentence summary that names the thing, e.g., *"Looks like a Python data pipeline you've been working on — sound right?"*
+
+**For an in-between case** (CLAUDE.md exists but is minimal): *"I read what's here — looks like an early-stage [project type]. Let me ask a few things to fill in the picture."*
+
+The point is to make the user feel oriented, not to prove you read everything. Save the inventory for the onboarding-log file in Phase 6.
 
 Then move to Phase 2 to fill in what the files can't tell you.
 
