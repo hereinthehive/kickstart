@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "TRANSCRIPT=\"${CLAUDE_TRANSCRIPT_PATH:-}\"; if [ -z \"$TRANSCRIPT\" ] || [ ! -f \"$TRANSCRIPT\" ]; then exit 0; fi; SUBSTANTIVE=$(grep -c '\"name\":\"\\(Edit\\|Write\\|MultiEdit\\|NotebookEdit\\)\"' \"$TRANSCRIPT\" 2>/dev/null || echo 0); BASH_OPS=$(grep -oE '\"name\":\"Bash\".*?\"command\":\"(git|npm|pnpm|yarn|cargo|make|pytest|sed -i|mv |cp |rm )[^\"]*\"' \"$TRANSCRIPT\" 2>/dev/null | wc -l); TOTAL=$((SUBSTANTIVE + BASH_OPS)); if [ \"$TOTAL\" -ge 5 ]; then FILES=$(grep -oE '\"file_path\":\"[^\"]+\"' \"$TRANSCRIPT\" 2>/dev/null | sed 's/\"file_path\":\"//;s/\"$//' | sort -u | tr '\\n' ',' | sed 's/,$//'); mkdir -p .claude; printf 'SESSION_END=%s\\nSUBSTANTIVE_TURNS=%s\\nFILES_TOUCHED=%s\\n' \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \"$TOTAL\" \"$FILES\" > .claude/.wrap-pending; fi"
+            "command": "TRANSCRIPT=\"${CLAUDE_TRANSCRIPT_PATH:-}\"; if [ -z \"$TRANSCRIPT\" ] || [ ! -f \"$TRANSCRIPT\" ]; then exit 0; fi; SUBSTANTIVE=$(grep -c '\"name\":\"\\(Edit\\|Write\\|MultiEdit\\|NotebookEdit\\)\"' \"$TRANSCRIPT\" 2>/dev/null || echo 0); BASH_OPS=$(grep -oE '\"name\":\"Bash\"[^}]*\"command\":\"(git|npm|pnpm|yarn|cargo|make|pytest|sed -i|mv |cp |rm )[^\"]*\"' \"$TRANSCRIPT\" 2>/dev/null | wc -l); TOTAL=$((SUBSTANTIVE + BASH_OPS)); if [ \"$TOTAL\" -ge 5 ]; then FILES=$(grep -oE '\"file_path\":\"[^\"]+\"' \"$TRANSCRIPT\" 2>/dev/null | sed 's/\"file_path\":\"//;s/\"$//' | sort -u | tr '\\n' ',' | sed 's/,$//'); mkdir -p .claude; printf 'SESSION_END=%s\\nSUBSTANTIVE_TURNS=%s\\nFILES_TOUCHED=%s\\n' \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \"$TOTAL\" \"$FILES\" > .claude/.wrap-pending; fi"
           }
         ]
       }
