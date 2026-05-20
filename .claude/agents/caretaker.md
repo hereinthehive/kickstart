@@ -19,7 +19,7 @@ The caller passes the project root path. Read:
 
 ## Step 1: Preference rot audit
 
-Read CLAUDE.md's `## Preferences` section (between the `<!-- managed by /remember -->` marker and the next `##` heading).
+Read CLAUDE.md's `## Preferences` section (between the `<!-- managed by /remember and /forget — items added below are remembered across sessions -->` marker and the next `##` heading).
 
 For each preference line, check:
 - **Stale referent** — does it mention a file, script, command, or tool? Does that thing still exist? Use `Grep`/`Glob` to verify.
@@ -42,7 +42,7 @@ For each, recommend removal if the threshold is crossed. Use conservative thresh
 
 - `.gitignore` contains `.claude/last-session.md`. If safety-net active (check by presence of `.claude/skills/undo/`), also `.claude/checkpoints.log` and `.claude/.session-start`.
 - `.claude/.session-start` exists if safety-net active. If missing, the SessionStart hook isn't writing it.
-- Preferences section's HTML marker is intact (`<!-- managed by /remember and /forget`). If missing, `/remember` and `/forget` can't function.
+- Preferences section's HTML marker is intact (`<!-- managed by /remember and /forget — items added below are remembered across sessions -->`). If missing, `/remember` and `/forget` can't function.
 - `.claude/onboarding-log.md` exists if onboarding has been run.
 
 ## Step 4: Return findings

@@ -16,8 +16,8 @@ Brief plain-language preview:
 
 In a single message, call the Agent tool twice:
 
-- `subagent_type: curator` — prompt: "Audit the Claude Code setup in `$(pwd)` against current external best practices. Read CLAUDE.md, .claude/settings.json, .claude/skills/, and .claude/knowledge.md if present. Return findings in the format your skill specifies. Do not modify files."
-- `subagent_type: caretaker` — prompt: "Audit the project's internal integrity in `$(pwd)`. Check preference rot, adoption signals (kill criteria), and shim/config integrity per your skill's instructions. Return findings in the format your skill specifies. Do not modify files."
+- `subagent_type: curator` — prompt: "Audit the Claude Code setup in the current project root against current external best practices. Read CLAUDE.md, .claude/settings.json, .claude/skills/, and .claude/knowledge.md if present. Return findings in the format your subagent definition specifies. Do not modify files."
+- `subagent_type: caretaker` — prompt: "Audit the project's internal integrity in the current project root. Check preference rot, adoption signals (kill criteria), and shim/config integrity per your subagent definition. Return findings in the format your subagent definition specifies. Do not modify files."
 
 Both run concurrently. Wait for both before proceeding.
 
