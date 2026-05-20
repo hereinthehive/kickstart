@@ -318,21 +318,62 @@ Append a dated entry to `.claude/onboarding-log.md` (create it if it doesn't exi
 
 ## Phase 7: Handoff
 
-Give the user a clear, friendly summary in plain language:
+Wrap up in plain language. Your audience may not be a developer — talk like a friendly assistant, not a CLI tool.
 
-- **What was created** — bullet list of files created or changed
-- **What to do now** — anything requiring action (restart session to activate hooks, etc.)
-- **What to expect** — how Claude will behave differently going forward
-- **Commands available** — written in the user's voice and including natural-language phrasing:
-  - *"What can you do?"* or `/help-me` — Remind me what commands you have.
-  - *"Remember to X"* or `/remember X` — Save a preference for future sessions.
-  - *"Forget about X"* or `/forget` — Remove a saved preference.
-  - *"Recap this session"* or `/wrap` — Write a session recap. I'll also do it automatically when you close cleanly.
-  - *"Update my setup"* or `/update` — Audit project health.
-  - *(if safety net opted in) "Save a checkpoint"* or `/checkpoint` — Snapshot before risky operations.
-  - *(if safety net opted in) "Undo that"* or `/undo` — Take back the last thing I did.
-- **For automatic weekly audits**, suggest the user run this once: `/loop weekly /update` — explain it will run /update every week, and they can stop it anytime by canceling the loop.
-- **Keeping current** — run `/update` periodically, or set up `/loop weekly /update` for automatic weekly audits
-- **Permission prompts going forward** — explain what they'll see and why: Claude asks before running commands, editing files, or accessing external services. The setup has pre-approved common safe actions for this project (listed in .claude/settings.json). For anything outside that list, a prompt will appear — they can approve it once, or always, depending on how much they trust the action.
+Cover these things, in roughly this order:
 
-If a session restart is needed, say so clearly and explain what it activates.
+**1. What's different now**
+
+In one or two sentences, tell them what changed. Focus on what they can DO, not what was built. Avoid file paths, "settings", "hooks", "permissions", "MCP", or "skills" as nouns.
+
+Good: *"Claude Code now knows about your project. You can talk to it normally and it'll remember what matters across sessions."*
+Bad: *"I created CLAUDE.md, settings.json, and 5 skill files in .claude/skills/."*
+
+**2. What you can ask me to do**
+
+A short list in the user's voice. Use natural-language phrases first; slash commands as the shortcut in parens. Adjust which ones appear based on what was activated (safety net opt-in).
+
+> Here's what you can ask me to do — just talk to me in plain English. The slash commands in parens are shortcuts if you prefer.
+>
+> - *"Remember to..."* — save something I should keep in mind across our conversations (`/remember`)
+> - *"Forget about..."* — drop a saved preference (`/forget`)
+> - *"Wrap up"* — recap this session so next time picks up where we left off (`/wrap`)
+> - *"Update my setup"* — check that everything's still in good shape (`/update`)
+> - *"What can you do?"* — see this list anytime (`/help-me`)
+>
+> [If safety net opted in:]
+> - *"Save a checkpoint"* — bookmark this exact state in case you want to come back (`/checkpoint`)
+> - *"Undo that"* — take back the last thing I did (`/undo`)
+
+**3. One thing to do right now**
+
+Suggest they run `/loop weekly /update` once, so the audit runs automatically each week. Phrase it as a gift, not a task:
+
+> *"One thing worth doing: run `/loop weekly /update` once. After that I'll quietly check in on your setup every week and tell you if anything needs attention."*
+
+**4. Anything that needs a restart**
+
+If hooks were added or changed in Phase 4, mention this briefly:
+
+> *"Some of what we set up needs a fresh start to take effect. Close and reopen Claude Code when you get a chance — no rush."*
+
+**5. Light touch on prompts**
+
+If they'll see permission prompts (because they're new to Claude Code or because safety-net commands need approvals), give them ONE sentence:
+
+> *"You might occasionally see a little box asking if I can run something. That's normal — just say yes if it makes sense, or no if it doesn't. Most common things are already pre-approved."*
+
+Don't list which permissions exist. Don't mention .claude/settings.json. Don't explain what a hook is.
+
+**6. The friendly close**
+
+End with one warm sentence that puts the ball in their court without pressure:
+
+> *"That's it — want to try saying 'remember to...' to test it out, or shall we just dive in?"*
+
+### Things to never do in handoff
+
+- Don't list file paths.
+- Don't say "I created/modified N files."
+- Don't use the words "hook", "MCP", "schema", "frontmatter", "subagent", "permission rule", "JSON" unless the user has used them first.
+- Don't dump the curator's detailed findings in the handoff. The recommendations file is there if they want it; reference it lightly.
