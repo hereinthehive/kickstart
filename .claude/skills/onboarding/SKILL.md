@@ -357,28 +357,59 @@ If hooks were added or changed in Phase 4, mention this briefly:
 
 > *"Some of what we set up needs a fresh start to take effect. Close and reopen Claude Code when you get a chance — no rush."*
 
-**5. Plugin recommendations (conditional)**
+**5. Add-ons that fit you (conditional)**
 
-If Phase 2 discovery signaled that the user does planning or project management — specifically, any of:
-- Q5 (session shape) includes "planning"
-- Q10 (kind of help wanted) includes "planner"
-- Q11 (areas to improve) includes "structuring projects"
-- Free-text answers mentioned planning, specs, architecture, or "thinking it through first"
+Based on the discovery answers, suggest plugins and tool integrations that match what the user actually said. Emit ONLY the entries whose triggers fire. Skip the section entirely if nothing triggers.
 
-— surface this recommendation, in plain language:
+Frame each suggestion in the user's voice — they're integrations or add-ons, not "plugins" or "MCP servers." Don't use those terms with the user unless they used them first.
 
-> *"One more thing worth knowing about. There's an optional add-on called Superpowers that fits well with how you said you like to work. It adds a few skills for thinking through what to build before building it — like brainstorming an idea or writing out a step-by-step plan. If you want to try it, copy and run these:*
->
-> ```
-> /plugin install superpowers
-> /reload-plugins
-> ```
->
-> *Totally optional — you can always add it later by asking me."*
+For each triggered item, surface the description and copy-paste command. Group everything into one friendly message rather than multiple separate ones. Open with something like:
 
-Only emit this when the trigger fires. If discovery surfaced no planning signal, skip the section entirely.
+> *"A few add-ons might fit how you said you work. Each is optional — you can install them now, later, or not at all."*
 
-DO NOT recommend other plugins by default. Only Superpowers, only on this signal. Other plugins (e.g., agent-skills) have overlapping behavior with Kickstart's own skills and should not be suggested unless the user explicitly asks for engineering-discipline tooling.
+Then list only the triggered items below.
+
+### Triggers and recommendations
+
+**Superpowers — planning toolkit**
+- Triggers: Q5 includes "planning"; Q10 includes "planner"; Q11 includes "structuring projects"; or free-text mentions planning, specs, architecture, or "thinking it through first."
+- Description: *"Adds a few skills for thinking through what to build before building it — brainstorming an idea, writing out a step-by-step plan, structured implementation."*
+- Install:
+  ```
+  /plugin install superpowers
+  /reload-plugins
+  ```
+
+**Figma integration**
+- Trigger: Q8 includes "Figma" OR free-text mentions Figma, design files, or specific Figma features.
+- Description: *"Lets me read and work with your Figma files directly — pull components, check designs, generate code that matches."*
+- Install: instruct the user to open Claude Code's integrations menu (`/mcp` or via Settings → Integrations) and enable Figma. Authentication with Figma will be required on first use. Don't give an exact CLI command — the install path is managed by Claude Code's connector system and changes over time.
+
+**Slack integration**
+- Trigger: Q8 includes "Slack" OR free-text mentions Slack, standups, channel notifications.
+- Description: *"Lets me search Slack messages, summarize channels, draft messages, and pull discussion context."*
+- Install: same pattern — `/mcp` or Settings → Integrations, enable Slack, authenticate.
+
+**Linear integration**
+- Trigger: Q8 includes "Linear" OR free-text mentions Linear, issues, tickets.
+- Description: *"Lets me read and update Linear issues, projects, and cycles — handy when you're tracking work in Linear."*
+- Install: `/mcp` or Settings → Integrations, enable Linear, authenticate.
+
+**Notion integration**
+- Trigger: Q8 includes "Notion" OR free-text mentions Notion docs or pages.
+- Description: *"Lets me read and write Notion pages so I can pull docs into a conversation or update them for you."*
+- Install: `/mcp` or Settings → Integrations, enable Notion, authenticate.
+
+**GitHub integration**
+- Trigger: Q8 includes "GitHub" AND the user said the project is on GitHub (most projects are; only skip if they explicitly said another host).
+- Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly — instead of just through git."*
+- Install: `/mcp` or Settings → Integrations, enable GitHub, authenticate.
+
+### What NOT to recommend by default
+
+- **agent-skills (Addy Osmani):** overlaps with Kickstart's own /remember, /wrap, /update. Recommend only if the user explicitly asks for production-engineering rigor.
+- **Database, deploy pipeline, "something else":** too generic to map to a specific integration. Don't recommend unless the user named a specific tool you recognize.
+- **Anything not directly triggered by discovery.** Don't manufacture recommendations.
 
 **6. Light touch on prompts**
 
