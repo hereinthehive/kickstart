@@ -52,6 +52,18 @@ Your goal here is not to fill out a form — it's to understand how this person 
 
 Have a real conversation. Ask one or two questions at a time, listen to the answers, and follow up on anything interesting. The richer the picture, the better the setup you can build.
 
+**Minimum coverage — discovery is not done until you have a confident answer in each of these areas.** Don't move to Phase 3 until you've asked about all of them (or the "show me, don't ask me" escape hatch has been triggered):
+
+1. **Project basics** — what it is, what it's for, what stage it's at, who it's for. (3–4 questions or one multi-part question.)
+2. **The user themselves** — their role, their experience level (with code, with Claude Code), how technical they are. (1–2 questions.)
+3. **Working situation** — alone or with a team; what other tools they use; whether the setup needs to work for others. (1–2 questions.)
+4. **Workflow patterns** — typical session shape, repeated sequences, things they re-explain each session. (1–2 questions.)
+5. **Frustrations and wishes** — what feels slow or repetitive, what they wish was automatic. (1 question minimum.)
+6. **Constraints and hard stops** — things never to do, off-limits files/folders, prior incidents. (1–2 questions.)
+7. **Safety-net opt-in** (conditional on git state 3, see below).
+
+That's 8–12 turns minimum. Discovery should feel like a friendly conversation, not a form — but a thin discovery produces a thin setup. Don't try to compress this into one or two big questions.
+
 **Prefer multiple-choice questions over open-ended ones for the first pass.** Open-ended prompts like "What does a typical session look like?" can stump non-technical users. Use the `AskUserQuestion` tool to offer 2–4 concrete options plus an "Other" escape hatch — it's faster, less intimidating, and still surfaces the signal you need. Save open-ended follow-ups for *after* a multiple-choice answer gives you something to dig into.
 
 Example openers (use `AskUserQuestion`, not free-text prompts):
@@ -59,7 +71,7 @@ Example openers (use `AskUserQuestion`, not free-text prompts):
 - *"What stage is it at? [Just starting / Actively building / Maintaining something existing]"*
 - *"Who's it for? [Just me / My team / Customers or the public]"*
 
-**"Show me, don't ask me" — if the user struggles, switch to defaults.** If someone answers "I don't know" or seems unsure on two questions in a row, stop interviewing. Say: *"No problem — I'll make sensible defaults based on what's already in the project, and you can tell me to change anything later."* Then proceed to Phase 3 with what you have.
+**"Show me, don't ask me" — only when the user genuinely can't engage.** This is an escape hatch for users who are stuck, not a license to short-circuit discovery after one confident answer. Trigger ONLY when the user has explicitly said "I don't know" or "just pick something" on at least two separate questions in a row, OR has asked you to "just skip it" / "just do your best." A user giving a thoughtful answer is NOT the trigger. When triggered, say: *"No problem — I'll make sensible defaults based on what's already in the project, and you can tell me to change anything later."* Then proceed to Phase 3 with what you have.
 
 **Start here — detect template scaffolding vs. real project content**
 
@@ -145,9 +157,13 @@ Don't try to cover everything in one go. If they give a rich answer, dig in. The
 Invoke the curator subagent (lives at `.claude/agents/curator.md`) via the Agent tool:
 
 - subagent_type: `curator`
-- prompt: "I'm running onboarding for a project. Based on current Claude Code best practices, recommend the right CLAUDE.md structure, hook patterns, and skill conventions for this project. Project context: <summary from Phase 2 interview>."
+- prompt: "I'm running onboarding for a project. Based on current Claude Code best practices, recommend the right CLAUDE.md structure, hook patterns, and skill conventions for this project. Search the current Claude Code documentation as part of your audit. Project context: <summary from Phase 2 interview, including project type, user experience level, working situation, and any constraints>."
 
-Use the curator's response as your build guide for Phase 4. If the subagent call fails, fall back to applying generally-known best practices and tell the user the curator wasn't reachable.
+**Persist the findings.** When the curator returns its structured block, write it verbatim to `.claude/curator-recommendations.md` (overwriting any previous file). Include a header line: `# Curator recommendations (Phase 3 — methodology) — [today's date]`. This gives the user a visible artifact and lets future onboarding runs compare against the previous recommendation set.
+
+**Tell the user.** Surface a 2–3 sentence plain-language summary of what the curator recommended. Example: *"The curator checked current Claude Code docs. It recommended A, B, and C for your setup. Full details in `.claude/curator-recommendations.md` if you want to see."*
+
+Use the curator's response as your build guide for Phase 4. If the subagent call fails (network error, timeout, etc.), fall back to applying generally-known best practices, tell the user the curator wasn't reachable, and skip writing the file.
 
 ## Phase 4: Build the setup
 
@@ -249,7 +265,35 @@ CLAUDE.md is often the first prose a non-technical user sees in their own setup.
 
 ## Phase 5: Curator review
 
-Invoke the curator subagent again via the Agent tool (subagent_type: `curator`). This pass reviews what was actually built rather than advising on methodology. The curator returns findings as a structured block; apply any quick wins before moving to Phase 6.
+Invoke the curator subagent again via the Agent tool:
+
+- subagent_type: `curator`
+- prompt: "I just finished onboarding setup for this project. Review what was actually built (CLAUDE.md, .claude/settings.json, .claude/skills/, .claude/agents/) against current best practices. Search current Claude Code docs as part of your review. Report what's healthy, what's missing, and any quick wins."
+
+This pass reviews what was actually built rather than advising on methodology.
+
+**Persist the findings.** Write the curator's structured block to `.claude/knowledge.md` (overwriting any previous file) with this exact format:
+
+```
+# Knowledge Base
+
+_Last updated: [today's date]_
+
+## Summary
+[1-2 sentence overall verdict from the curator's findings]
+
+## Latest findings
+[paste the curator's structured block here verbatim]
+
+## Run history
+| Date | Trigger | Summary |
+|------|---------|---------|
+| [today] | onboarding (Phase 5) | [one-line summary] |
+```
+
+**Tell the user.** Surface a plain-language summary of what the curator found. If there are quick wins, ask whether to apply them now before moving to Phase 6.
+
+If the subagent call fails, skip the file write and tell the user the review couldn't run — they can run `/update` later to get one.
 
 ## Phase 6: Write the onboarding log
 
