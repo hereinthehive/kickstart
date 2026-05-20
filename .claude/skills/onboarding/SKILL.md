@@ -363,6 +363,8 @@ Based on the discovery answers, suggest plugins and tool integrations that match
 
 Frame each suggestion in the user's voice — they're integrations or add-ons, not "plugins" or "MCP servers." Don't use those terms with the user unless they used them first.
 
+**Auto-install vs. guided install.** Some integrations connect to your accounts (Figma, Slack, Linear, Notion, GitHub) — those need you to log in, so the install path is a guided one: open the integrations menu and authenticate. Others are self-hosted command-line tools (like design-systems-mcp) — those have no auth flow, so onboarding can offer to install them directly with your consent. The instructions below specify which kind each one is.
+
 For each triggered item, surface the description and copy-paste command. Group everything into one friendly message rather than multiple separate ones. Open with something like:
 
 > *"A few add-ons might fit how you said you work. Each is optional — you can install them now, later, or not at all."*
@@ -380,30 +382,42 @@ Then list only the triggered items below.
   /reload-plugins
   ```
 
+**Design-systems-mcp (self-hosted, auto-install offered)**
+- Trigger: Q1 (project type) is "design system or plugin"; OR Q11 (areas to improve) includes design-system work; OR free-text answers in Q5/Q7/Q11/Q12 mention design systems, tokens, component libraries, or design-system specific tooling.
+- Description: *"Adds a small server that helps me work with design-system primitives — tokens, components, naming conventions. Open source, runs locally, doesn't need an account."*
+- Install path: auto-install with consent. Ask the user:
+  > *"Want me to install it now? It's a small command-line tool that runs locally — no login needed. Takes about 10 seconds and you'll need to close and reopen Claude Code once afterward."*
+  - On yes: run `claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp`. Capture and surface any errors in plain language. (Onboarding will prompt you to approve the install command when you say yes — that's expected.)
+  - On no: give the user the exact command in a copy-paste block so they can run it later:
+    ```
+    claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp
+    ```
+  - Either way, tell the user they'll need to restart for the new MCP to be active.
+
 **Figma integration**
 - Trigger: Q8 includes "Figma" OR free-text mentions Figma, design files, or specific Figma features.
 - Description: *"Lets me read and work with your Figma files directly — pull components, check designs, generate code that matches."*
-- Install: instruct the user to open Claude Code's integrations menu (`/mcp` or via Settings → Integrations) and enable Figma. Authentication with Figma will be required on first use. Don't give an exact CLI command — the install path is managed by Claude Code's connector system and changes over time.
+- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Figma. It'll walk you through logging in to your Figma account."*
 
 **Slack integration**
 - Trigger: Q8 includes "Slack" OR free-text mentions Slack, standups, channel notifications.
 - Description: *"Lets me search Slack messages, summarize channels, draft messages, and pull discussion context."*
-- Install: same pattern — `/mcp` or Settings → Integrations, enable Slack, authenticate.
+- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Slack. It'll walk you through logging in to your Slack account."*
 
 **Linear integration**
 - Trigger: Q8 includes "Linear" OR free-text mentions Linear, issues, tickets.
 - Description: *"Lets me read and update Linear issues, projects, and cycles — handy when you're tracking work in Linear."*
-- Install: `/mcp` or Settings → Integrations, enable Linear, authenticate.
+- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Linear. It'll walk you through logging in to your Linear account."*
 
 **Notion integration**
 - Trigger: Q8 includes "Notion" OR free-text mentions Notion docs or pages.
 - Description: *"Lets me read and write Notion pages so I can pull docs into a conversation or update them for you."*
-- Install: `/mcp` or Settings → Integrations, enable Notion, authenticate.
+- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Notion. It'll walk you through logging in to your Notion account."*
 
 **GitHub integration**
 - Trigger: Q8 includes "GitHub" AND the user said the project is on GitHub (most projects are; only skip if they explicitly said another host).
 - Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly — instead of just through git."*
-- Install: `/mcp` or Settings → Integrations, enable GitHub, authenticate.
+- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable GitHub. It'll walk you through logging in to your GitHub account."*
 
 ### What NOT to recommend by default
 
