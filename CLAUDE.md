@@ -1,4 +1,4 @@
-# Starter
+# Kickstart
 
 A Claude Code starter template with built-in onboarding and knowledge curation.
 
