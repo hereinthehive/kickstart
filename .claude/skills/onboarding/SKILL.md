@@ -56,109 +56,119 @@ Then move to Phase 2 to fill in what the files can't tell you.
 
 ## Phase 2: Discovery interview
 
-Your goal here is not to fill out a form — it's to understand how this person actually works so you can identify where custom skills or agents would genuinely help them. Think of this as a consultant's discovery session.
+Your job is to gather enough about the project, the user, and how they work to produce five concrete artifacts:
 
-Have a real conversation. Ask one or two questions at a time, listen to the answers, and follow up on anything interesting. The richer the picture, the better the setup you can build.
+| Artifact | What it needs |
+|---|---|
+| **CLAUDE.md** | Project purpose, stack, run/test/build commands, conventions, team context, constraints |
+| **`.claude/settings.json` permissions** | Auto-allowed commands; deny rules for sensitive paths |
+| **User-level `~/.claude/CLAUDE.md`** | Communication style, verbosity, technical level |
+| **Project-specific skills** | Repeated workflows, recurring context, handoff points |
+| **Safety net + hooks** | Git comfort, risk tolerance, session-start surfacing |
 
-**Minimum coverage — discovery is not done until you have a confident answer in each of these areas.** Don't move to Phase 3 until you've asked about all of them (or the "show me, don't ask me" escape hatch has been triggered):
+Each question below maps to one or more of these. If a question doesn't influence an artifact, drop it.
 
-1. **Project basics** — what it is, what it's for, what stage it's at, who it's for. (3–4 questions or one multi-part question.)
-2. **The user themselves** — their role, their experience level (with code, with Claude Code), how technical they are. (1–2 questions.)
-3. **Working situation** — alone or with a team; what other tools they use; whether the setup needs to work for others. (1–2 questions.)
-4. **Workflow patterns** — typical session shape, repeated sequences, things they re-explain each session. (1–2 questions.)
-5. **Frustrations and wishes** — what feels slow or repetitive, what they wish was automatic. (1 question minimum.)
-6. **Constraints and hard stops** — things never to do, off-limits files/folders, prior incidents. (1–2 questions.)
-7. **Safety-net opt-in** (conditional on git state 3, see below).
+### How to run the questionnaire
 
-That's 8–12 turns minimum. Discovery should feel like a friendly conversation, not a form — but a thin discovery produces a thin setup. Don't try to compress this into one or two big questions.
+- **One question at a time.** Acknowledge each answer briefly before the next.
+- **Prefer `AskUserQuestion` (multiple choice) for finite answer spaces.** Use free text only when stories matter (frustrations, constraints, incidents).
+- **Section transitions** so it feels paced, not bureaucratic. Example between sections: *"OK, got a picture of the project. Let me ask about how you work day-to-day."*
+- **Adjust register early.** If their Q4 answer (relationship to code) suggests "not a developer," drop technical vocabulary (hooks, MCP, skills, permissions) from the rest of the conversation immediately.
 
-**Prefer multiple-choice questions over open-ended ones for the first pass.** Open-ended prompts like "What does a typical session look like?" can stump non-technical users. Use the `AskUserQuestion` tool to offer 2–4 concrete options plus an "Other" escape hatch — it's faster, less intimidating, and still surfaces the signal you need. Save open-ended follow-ups for *after* a multiple-choice answer gives you something to dig into.
+### Infer and confirm — don't re-ask
 
-Example openers (use `AskUserQuestion`, not free-text prompts):
-- *"What best describes this project? [A website / An app or tool / A script or automation / Notes, writing, or research]"*
-- *"What stage is it at? [Just starting / Actively building / Maintaining something existing]"*
-- *"Who's it for? [Just me / My team / Customers or the public]"*
+If an answer makes one or more later questions obvious, **infer the answer and confirm in one sentence**, then move on to questions that aren't covered.
 
-**"Show me, don't ask me" — only when the user genuinely can't engage.** This is an escape hatch for users who are stuck, not a license to short-circuit discovery after one confident answer. Trigger ONLY when the user has explicitly said "I don't know" or "just pick something" on at least two separate questions in a row, OR has asked you to "just skip it" / "just do your best." A user giving a thoughtful answer is NOT the trigger. When triggered, say: *"No problem — I'll make sensible defaults based on what's already in the project, and you can tell me to change anything later."* Then proceed to Phase 3 with what you have.
+Example: user says *"I'm building a Figma plugin for our design team on a 6-week sprint."* That answers Q1 (plugin), Q2 (active build), Q3 (team), partially Q8 (Figma in the tool list), and hints at Q15 (time pressure). Don't re-ask any of those. Instead say:
 
-**Start here — detect template scaffolding vs. real project content**
+> *"Based on that I'll mark this as a Figma plugin you're actively building for your design team, with some time pressure. Sound right?"*
 
-In Phase 1 you read CLAUDE.md and README.md. Before doing anything else, decide which of these you have:
+Then continue with Q4–Q7 and Q9–Q14 and Q16. The point is to feel like a smart researcher, not a form-filling robot.
 
-1. **Template scaffolding.** CLAUDE.md begins with `# Kickstart` and describes the starter template generically (mentions "/onboarding", "starter template", "fork it"). README.md says "A Claude Code starter template with built-in onboarding...". This means the user just forked Kickstart and is starting fresh. The content describes the *template*, not the user's project. Do NOT treat any of this as project information. Move directly into the project-discovery questions below, and plan to OVERWRITE this CLAUDE.md with the user's real project content in Phase 4.
+### The questionnaire
 
-2. **Real project content.** CLAUDE.md describes an actual project — a specific codebase, problem, or team. README.md isn't the Kickstart template README. This means onboarding has been run before, or the project was set up another way. Present a confident summary of what you understood and ask the user to confirm or correct it — don't re-interrogate. Example: *"From what I read, this looks like a Python data pipeline you're actively building for an internal team. Sound right, or am I off?"*
+**Section A — Orient (project + user)**
 
-**Never ask "are you developing the Kickstart template itself or using it for a real project?"** Anyone running `/onboarding` from a fork is using it for a real project. That distinction isn't real for the user — it's only real for template maintainers, who don't run `/onboarding` on their own work.
+**Q1. Project type.** AskUserQuestion: *"What best describes this project?"* Options: web app / CLI tool or script / library or package / data pipeline or analysis / writing, notes, or research / design system or plugin / something else. → CLAUDE.md project header.
 
-In the template-scaffolding case, ask the project-discovery questions to fill in what the scaffolding doesn't tell you:
+**Q2. Lifecycle stage.** AskUserQuestion: *"Where is it in its life?"* Options: just starting / actively building / maintaining / experimenting. → Tone register; whether to scaffold deploy skills.
 
-- What is this project? What problem does it solve, or what are you building?
-- What are you personally trying to achieve with it — what does success look like?
-- What stage is it at?
-- Who is it for?
+**Q3. Audience.** AskUserQuestion: *"Who's it for?"* Options: just me / my team / external users or customers / open-source / mixed. → Conditional questions later (Q16 only if team or customers); CLAUDE.md framing.
 
-In the real-project case, only ask these if the user's confirmation reveals genuine ambiguity.
+**Q4. The user themselves.** AskUserQuestion: *"How would you describe yourself?"* Options: I write code daily / I code sometimes / I'm not really a developer / I'm learning to code. → Register shift; user-level verbosity default.
 
-**Establish experience level early** — within the first exchange, get a clear read on how technical this person is and how familiar they are with Claude Code. Everything after that should match their level:
+**Section B — Working day**
 
-- **Non-technical / new**: plain language only. No mention of hooks, MCP servers, skills, permissions, or settings. Ask about what they do, what's annoying, what they wish was easier. You translate their answers into technical decisions invisibly.
-- **Some experience**: light technical framing is fine, but still lead with outcomes not implementation.
-- **Power user**: can go deep — ask about MCP servers, hook types, specific permissions, agent patterns.
+Transition: *"Got a picture of the project. Let me ask about how you work day-to-day."*
 
-Adapt mid-conversation. If someone says "I'm not really technical" partway through, shift register immediately and don't go back.
+**Q5. Session shape.** AskUserQuestion (multi-select): *"What do you usually start a Claude Code session with?"* Options: writing new code / fixing bugs / understanding existing code / writing tests / writing docs / design work / planning / something else. → Skill suggestions.
 
-**What you're trying to understand:**
+**Q6. Slowdowns.** AskUserQuestion (multi-select): *"What slows you down most?"* Options: setup or config / writing tests / explaining context to Claude / merge conflicts / waiting for builds or CI / code review / nothing in particular. → Project-specific skill candidates (e.g., session-start hook if "explaining context"; safety-net push if "merge conflicts").
 
-*Their workflow* — ask in their language
-- What does a typical session look like for you? What do you usually start with?
-- Are there things you find yourself doing over and over?
-- Is there anything you have to remind me of at the start of every conversation?
+**Q7. Wishes.** Free text (skip-able): *"Anything you wish just happened automatically? Anything you'd love to stop doing manually?"* → Direct skill candidate input.
 
-*Their frustrations and wishes*
-- What feels slow or repetitive about how you work right now?
-- Is there anything you wish just happened automatically?
-- What would make the biggest difference to your day-to-day?
+**Section C — Tools and integrations**
 
-*Their context*
-- Working alone or with others? If with others — does the setup need to work for them too?
-- What other tools are involved in your work? (however they'd naturally describe them — don't prompt with technical names)
-- Are there parts of the process — like reviewing, testing, or sharing — where you'd want more help?
+**Q8. Tool ecosystem.** AskUserQuestion (multi-select): *"What other tools are involved in your work?"* Options: Slack / GitHub / Linear / Figma / Notion / a database / a deploy pipeline / none / something else. → MCP server mentions in handoff (Slack, Linear, Figma plugins are available); integration nudges.
 
-*Their preferences*
-- How do you like me to communicate — brief and to the point, or explain as I go?
+**Section D — Communication, help shape, and direction**
 
-*Safety-net opt-in (conditional)*
+**Q9. Communication style.** AskUserQuestion: *"How do you want me to talk?"* Options: terse — just do it / brief — narrate key choices / explain as you go. → User-level CLAUDE.md verbosity.
 
-If git state is (3) — installed and a repo — ask via `AskUserQuestion`:
+**Q10. Kind of help wanted.** AskUserQuestion (multi-select): *"Where do you most want help?"* Options: pair programmer (work alongside me) / autopilot (just do it) / proofreader (catch mistakes) / explainer (help me understand) / planner (help me think first) / I'm not sure, surprise me. → Drives Claude's default proactivity and which skills get prominence in /help-me.
 
-> "Want a safety net for taking back changes? I can add two simple commands: `/checkpoint` (save a snapshot you can come back to) and `/undo` (reverse the last thing I did). Both use git behind the scenes but you don't need to know git to use them."
->
-> - **Yes, add them** (recommended for most projects)
-> - **Not now** — you can ask me to add them later
-> - **No, skip it** — I don't want git-based undo in this project
+**Q11. Areas to improve / unstuck on.** AskUserQuestion (multi-select): *"What do you most want to get better at, or get unstuck on?"* Options: testing / understanding existing code / git / structuring projects / deployment / code review / writing docs / nothing in particular. → The single most useful signal for which custom skills to scaffold. If they pick something, build a relevant skill in Phase 4. If "nothing in particular," do NOT manufacture skills.
 
-Record the decision in onboarding-log.md (Phase 6). On "yes," remember to activate the safety-net skills in Phase 4. On "not now," remember to re-ask on next refresh. On "no," remember to skip the question entirely on future refreshes.
+**Section E — Risk and constraints**
 
-If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by git. If you ever want a safety net for undoing changes, just say so and I can set that up."*
+Transition: *"Last bits — what should I avoid?"*
 
-If git state is (1), say nothing about the safety net.
+**Q12. Off-limits areas.** Free text (skip-able): *"Anything Claude should never touch? Files, folders, parts of the project to keep hands off?"* → CLAUDE.md Constraints + settings.json deny rules.
 
-*Their constraints and hard stops* — ask carefully, in plain terms
-- Are there things you'd never want me to do without you explicitly asking?
-- Any files, folders, or parts of the project I should treat as hands-off?
-- Has anything gone wrong before that you'd want to make sure doesn't happen again?
-- Any rules — from your team, your company, or just your own preferences — I should always follow?
+**Q13. Past incidents to prevent.** Free text (skip-able): *"Has anything gone wrong before that you'd want to make sure doesn't happen again?"* → CLAUDE.md Constraints (incident-specific).
 
-**As they talk, actively listen for:**
-- Repeated sequences → candidate for a custom command
-- Things they re-explain each session → candidate for project memory or a session hook
-- Handoff points (to CI, to teammates, to review) → candidate for an automated workflow
-- Tools they mention by any name → may map to integrations worth setting up
-- Frustrations → problems worth solving with automation
-- Hard limits → constraints to enforce, not just note
+**Section F — Conditional questions**
 
-Don't try to cover everything in one go. If they give a rich answer, dig in. The goal is a complete picture of how they work — not a completed checklist.
+These only fire when an earlier answer makes them relevant.
+
+**Q14. Shipping cadence.** AskUserQuestion (only if Q2 = actively building OR maintaining): *"How often does this ship?"* Options: multiple times a day / weekly / monthly / when it's ready / never, internal only. → Deploy skills + CI hook suggestions.
+
+**Q15. Compliance.** AskUserQuestion (multi-select, only if Q3 = team OR customers): *"Any rules you have to follow?"* Options: GDPR / HIPAA / SOC2 / PCI / financial regulations / accessibility (WCAG) / company-internal rules / none. → settings.json deny rules, CLAUDE.md Constraints, curator's review dimensions.
+
+**Q16. Safety net.** AskUserQuestion (only if git state is 3 — installed and a repo): *"Want a safety net for taking back changes? I can add two simple commands: `/checkpoint` (save a snapshot you can come back to) and `/undo` (reverse the last thing I did). Both use git behind the scenes but you don't need to know git to use them."* Options: yes, add them (recommended) / not now — ask me later / no, skip it. → Activates `/undo` and `/checkpoint` skills.
+
+If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by git. If you ever want a safety net for undoing changes, just say so and I can set that up."* If git state is (1), say nothing about the safety net.
+
+Record the Q16 decision in onboarding-log.md (Phase 6). On "yes," activate the safety-net skills in Phase 4. On "not now," remember to re-ask on next refresh. On "no," skip the question entirely on future refreshes.
+
+### Listening for skill candidates
+
+As you go, actively listen for:
+
+- Repeated sequences (e.g., "I always run tests then lint then commit") → candidate for a custom command in Phase 4.
+- Things they re-explain each session → candidate for project memory.
+- Handoff points (CI, teammates, review) → candidate for an automated workflow.
+- Frustrations from Q6 / Q7 / Q11 → direct skill candidates.
+
+**Hard rule: don't manufacture skills.** Only build a project-specific skill in Phase 4 if at least one answer directly motivated it. If discovery surfaced no clear candidate, ship with only the always-active skills. A clean, smaller setup is better than a noisy one full of skills the user will never invoke.
+
+### When discovery is done
+
+You've finished Phase 2 when you have a confident answer (asked OR inferred-and-confirmed) to each of:
+- Q1–Q4 (orientation)
+- Q5–Q7 (working day)
+- Q8 (tools)
+- Q9–Q11 (communication and direction)
+- Q12–Q13 (constraints)
+- Q14 (only if conditional triggered)
+- Q15 (only if conditional triggered)
+- Q16 (only if conditional triggered)
+
+In practice that's 10–14 questions actually asked, with 2–4 inferred. Real conversation pace: 8–12 turns of dialogue.
+
+### Escape hatch
+
+If the user explicitly says "I don't know" or "just pick something" or "skip it" on multiple separate questions in a row, OR explicitly asks you to "just do your best," stop interviewing and say: *"No problem — I'll make sensible defaults and you can tell me to change anything later."* Then proceed to Phase 3 with what you have. A single confident answer is NOT the trigger.
 
 ## Phase 3: Consult the curator on methodology
 
