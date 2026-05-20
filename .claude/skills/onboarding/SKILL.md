@@ -1,10 +1,10 @@
 ---
-description: Set up Claude Code for this project — interviews you, builds CLAUDE.md and settings, then has the Knowledge Curator review everything before handing off
+description: Set up Claude Code for this project — interviews you, builds CLAUDE.md and settings, then has the curator subagent review everything before handing off
 disable-model-invocation: true
 allowed-tools: Read Write Edit Bash WebSearch WebFetch Agent Skill
 ---
 
-You are an onboarding orchestrator for Claude Code. Your goal is to understand this project and how the user works, set up Claude Code for success, have the Knowledge Curator review what you've built, then hand off clearly to the user.
+You are an onboarding orchestrator for Claude Code. Your goal is to understand this project and how the user works, set up Claude Code for success, have the curator subagent review what you've built, then hand off clearly to the user.
 
 ## Before anything else: set expectations
 
@@ -38,6 +38,9 @@ Silently read all available context before asking a single question:
 
 **User preferences (user-level, not project-level):**
 - Read `~/.claude/CLAUDE.md` if it exists — this contains preferences this user has set across projects
+
+**Environment detection:**
+- Run `git --version >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1` to determine git state. Record state for Phase 2: (1) no git installed, (2) git installed but not a repo, (3) git installed + repo.
 
 After reading, before asking anything, tell the user what you found — briefly and in plain language. For example: "I can see this is a Node.js project with a test suite and a CI config. I also found an existing CLAUDE.md with some preferences already set." This is a given — the user should always know what you already have so they don't re-explain things you already know, and so they can correct anything you've misread.
 
@@ -97,6 +100,22 @@ Adapt mid-conversation. If someone says "I'm not really technical" partway throu
 *Their preferences*
 - How do you like me to communicate — brief and to the point, or explain as I go?
 
+*Safety-net opt-in (conditional)*
+
+If git state is (3) — installed and a repo — ask via `AskUserQuestion`:
+
+> "Want a safety net for taking back changes? I can add two simple commands: `/checkpoint` (save a snapshot you can come back to) and `/undo` (reverse the last thing I did). Both use git behind the scenes but you don't need to know git to use them."
+>
+> - **Yes, add them** (recommended for most projects)
+> - **Not now** — you can ask me to add them later
+> - **No, skip it** — I don't want git-based undo in this project
+
+Record the decision in onboarding-log.md (Phase 6). On "yes," remember to activate the safety-net skills in Phase 4. On "not now," remember to re-ask on next refresh. On "no," remember to skip the question entirely on future refreshes.
+
+If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by git. If you ever want a safety net for undoing changes, just say so and I can set that up."*
+
+If git state is (1), say nothing about the safety net.
+
 *Their constraints and hard stops* — ask carefully, in plain terms
 - Are there things you'd never want me to do without you explicitly asking?
 - Any files, folders, or parts of the project I should treat as hands-off?
@@ -115,12 +134,12 @@ Don't try to cover everything in one go. If they give a rich answer, dig in. The
 
 ## Phase 3: Consult the curator on methodology
 
-Before building anything, invoke the Knowledge Curator. Try the Skill tool first:
-- skill: `knowledge-curator`
+Invoke the curator subagent (lives at `.claude/agents/curator.md`) via the Agent tool:
 
-If the Skill tool is unavailable in this session, fall back to: read `.claude/skills/knowledge-curator/SKILL.md` and follow its instructions as an Agent task, passing the user's specific needs from Phase 2 as context.
+- subagent_type: `curator`
+- prompt: "I'm running onboarding for a project. Based on current Claude Code best practices, recommend the right CLAUDE.md structure, hook patterns, and skill conventions for this project. Project context: <summary from Phase 2 interview>."
 
-Either way, the curator fetches current docs and recommends the best approach for this project's needs. Use those recommendations as your build guide. Do not skip this step or proceed on assumptions — if both approaches fail, tell the user and explain what's needed to proceed.
+Use the curator's response as your build guide for Phase 4. If the subagent call fails, fall back to applying generally-known best practices and tell the user the curator wasn't reachable.
 
 ## Phase 4: Build the setup
 
@@ -149,7 +168,6 @@ Use a project-specific heading so multiple projects can coexist in this file wit
 Configure for this project:
 - Permissions: allow commands this project genuinely needs
 - SessionStart hook: already configured for git context and environment detection — preserve it, extend if needed
-- A weekly /knowledge-curator schedule block
 - Additional hooks if the workflow calls for them
 
 ### Project-specific skills
@@ -164,17 +182,66 @@ Examples of what good discovery might surface:
 
 For each skill you create, tell the user in the handoff what it does and when to use it.
 
-### Always create: /help-me
+### Skills setup (always-active)
 
-Regardless of what else you build, always create a `/help-me` skill at `.claude/skills/help-me/SKILL.md`. Its job is to remind the user — in plain language — what commands are available and when to use each one. List every project-specific skill you created during onboarding, written for someone who doesn't remember technical names. This is the safety net for non-technical users who forget what they configured a week later.
+The following ship with the template and are already in `.claude/skills/`:
+- `/help-me`, `/remember`, `/forget`, `/wrap`, `/update`
+
+Plus subagents at `.claude/agents/`:
+- `curator`, `caretaker`
+
+Verify they're present. If any are missing, abort and tell the user the template is incomplete.
+
+### Skills setup (conditional — safety net)
+
+If the user opted "yes" to the safety net in Phase 2:
+
+`mkdir -p .claude/skills && cp -r .claude/skill-templates/undo .claude/skills/undo && cp -r .claude/skill-templates/checkpoint .claude/skills/checkpoint`
+
+Then add these to the `permissions.allow` array in `.claude/settings.json`:
+
+- `"Bash(git stash *)"`
+- `"Bash(git status *)"`
+- `"Bash(git log *)"`
+- `"Bash(git reset --soft *)"`
+
+Read the file, parse the JSON, append the entries, write back.
+
+If the user opted "not now" or "no," do not copy the template files. Record the decision in the onboarding-log.
+
+### CLAUDE.md additions
+
+When writing CLAUDE.md in Phase 4, include these sections explicitly:
+
+1. **`## Talking to me`** — verbatim from the spec, listing natural-language triggers for each active skill. Adjust which triggers appear based on whether the safety net is active.
+
+2. **`## Preferences`** — with the HTML comment marker:
+
+   `## Preferences`
+   `<!-- managed by /remember and /forget — items added below are remembered across sessions -->`
+
+   Empty body. `/remember` will populate.
+
+3. **`## Constraints`** — from the interview answers.
+
+### Gitignore additions
+
+If git state is (3):
+
+- Append `.claude/last-session.md`, `.claude/update-report.md`, `.claude/.wrap-pending` to `.gitignore` (create the file if missing; use `grep -qxF` to avoid duplicates).
+
+If the safety net was opted in, also append:
+
+- `.claude/checkpoints.log`
+- `.claude/.session-start`
 
 ## Phase 4.5: Polish the prose
 
 CLAUDE.md is often the first prose a non-technical user sees in their own setup. Before moving on, invoke the `elements-of-style:writing-clearly-and-concisely` skill (via the Skill tool) and ask it to tighten the CLAUDE.md you just wrote. Accept its rewrites unless they introduce errors. Clear prose lowers the barrier for everyone who reads it later.
 
-## Phase 5: Knowledge Curator review
+## Phase 5: Curator review
 
-Invoke the Knowledge Curator again using the same approach as Phase 3 (Skill tool, falling back to Agent with the SKILL.md content if needed). This pass reviews what was actually built rather than advising on methodology. It will update `.claude/knowledge.md` with findings. Apply any quick wins before moving to Phase 6.
+Invoke the curator subagent again via the Agent tool (subagent_type: `curator`). This pass reviews what was actually built rather than advising on methodology. The curator returns findings as a structured block; apply any quick wins before moving to Phase 6.
 
 ## Phase 6: Write the onboarding log
 
@@ -191,6 +258,9 @@ Append a dated entry to `.claude/onboarding-log.md` (create it if it doesn't exi
 - Team: ...
 - [other key facts]
 
+### Decisions on optional features
+- Safety net (/undo, /checkpoint): [yes / not now / no]
+
 ### Questions answered (skip on re-run)
 - [anything learned in the interview that future runs shouldn't re-ask]
 ```
@@ -202,8 +272,16 @@ Give the user a clear, friendly summary in plain language:
 - **What was created** — bullet list of files created or changed
 - **What to do now** — anything requiring action (restart session to activate hooks, etc.)
 - **What to expect** — how Claude will behave differently going forward
-- **Commands available** — /onboarding, /knowledge-curator, plus any project-specific skills created
-- **Keeping current** — the SessionStart hook will tell them how to run /knowledge-curator based on their environment (automatic on web, manual or /loop on CLI/IDE)
+- **Commands available** — written in the user's voice and including natural-language phrasing:
+  - *"What can you do?"* or `/help-me` — Remind me what commands you have.
+  - *"Remember to X"* or `/remember X` — Save a preference for future sessions.
+  - *"Forget about X"* or `/forget` — Remove a saved preference.
+  - *"Recap this session"* or `/wrap` — Write a session recap. I'll also do it automatically when you close cleanly.
+  - *"Update my setup"* or `/update` — Audit project health.
+  - *(if safety net opted in) "Save a checkpoint"* or `/checkpoint` — Snapshot before risky operations.
+  - *(if safety net opted in) "Undo that"* or `/undo` — Take back the last thing I did.
+- **For automatic weekly audits**, suggest the user run this once: `/loop weekly /update` — explain it will run /update every week, and they can stop it anytime by canceling the loop.
+- **Keeping current** — run `/update` periodically, or set up `/loop weekly /update` for automatic weekly audits
 - **Permission prompts going forward** — explain what they'll see and why: Claude asks before running commands, editing files, or accessing external services. The setup has pre-approved common safe actions for this project (listed in .claude/settings.json). For anything outside that list, a prompt will appear — they can approve it once, or always, depending on how much they trust the action.
 
 If a session restart is needed, say so clearly and explain what it activates.
