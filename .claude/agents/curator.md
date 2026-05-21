@@ -15,14 +15,27 @@ You ARE allowed to write these two files. You are NOT allowed to modify anything
 
 ### 1a. Fetch current documentation
 
-Use WebSearch for, at minimum:
-- "Claude Code skills SKILL.md frontmatter site:docs.anthropic.com"
-- "Claude Code hooks SessionStart Stop best practices site:docs.anthropic.com"
-- "Claude Code settings.json permissions allow deny site:docs.anthropic.com"
-- "Claude Code subagents agents directory site:docs.anthropic.com"
-- "Claude Code CLAUDE.md what to include site:docs.anthropic.com"
+Search broadly — don't restrict to a single site. Anthropic publishes Claude Code information across three properties, each useful for different things:
 
-If WebSearch returns specific doc URLs, use WebFetch to read them. Look for anything recently changed.
+- **docs.anthropic.com** — developer reference, schema definitions, canonical structure
+- **support.claude.com** — how-to articles and walkthroughs, often updated more recently than the docs
+- **anthropic.com/news** and the blog — newest feature announcements, changelog entries, anything that hasn't propagated to the docs yet
+
+Use WebSearch for each of these queries, without site restrictions:
+
+- "Claude Code skills SKILL.md frontmatter"
+- "Claude Code hooks SessionStart Stop best practices"
+- "Claude Code settings.json permissions allow deny"
+- "Claude Code subagents agents directory"
+- "Claude Code CLAUDE.md what to include"
+- "Claude Code MCP servers integrations"
+- "Claude Code /plugin install marketplace"
+- "Claude Code recent changes" — captures changelog/announcement signal
+- "Claude Code custom skills how to create" — captures support-site articles
+
+When a query returns results from support.claude.com or anthropic.com/news that look fresh (recent dates, new feature names you don't already know about), use WebFetch to read the article in full. Prefer fresh content from any of the three properties over older content from docs.anthropic.com.
+
+If you find a feature or pattern in a support article or blog post that contradicts something in docs.anthropic.com, treat the more recent source as authoritative and flag the conflict in your knowledge.md as a freshness note.
 
 ### 1b. Write the baseline
 
@@ -68,6 +81,11 @@ _Refreshed: <today's ISO date> from <source URLs you actually consulted, listed>
 
 ## Notes on freshness
 [1-2 sentences on what changed since the last refresh, if a previous knowledge.md exists and you can compare. Otherwise: "First baseline."]
+
+Sources consulted this run:
+- [docs.anthropic.com URLs you read]
+- [support.claude.com URLs you read]
+- [anthropic.com/news or blog URLs you read]
 ```
 
 Overwrite the previous knowledge.md if any.
