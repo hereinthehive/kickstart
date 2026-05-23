@@ -54,121 +54,212 @@ The point is to make the user feel oriented, not to prove you read everything. S
 
 Then move to Phase 2 to fill in what the files can't tell you.
 
-## Phase 2: Discovery interview
+## Phase 2: Discovery
 
-Your job is to gather enough about the project, the user, and how they work to produce five concrete artifacts:
+Your job is to understand this person and their workflow well enough to produce five concrete artifacts:
 
 | Artifact | What it needs |
 |---|---|
 | **CLAUDE.md** | Project purpose, stack, run/test/build commands, conventions, team context, constraints |
 | **`.claude/settings.json` permissions** | Auto-allowed commands; deny rules for sensitive paths |
 | **User-level `~/.claude/CLAUDE.md`** | Communication style, verbosity, technical level |
-| **Project-specific skills** | Repeated workflows, recurring context, handoff points |
+| **Project-specific skills and agents** | Repeated workflows, recurring context, handoff points, friction |
 | **Safety net + hooks** | Git comfort, risk tolerance, session-start surfacing |
 
-Each question below maps to one or more of these. If a question doesn't influence an artifact, drop it.
+### Start open
 
-### How to run the questionnaire
+After your warm sentence from Phase 1, ask just this:
 
-- **One question at a time.** Acknowledge each answer briefly before the next.
-- **Prefer `AskUserQuestion` (multiple choice) for finite answer spaces.** Use free text only when stories matter (frustrations, constraints, incidents).
-- **Section transitions** so it feels paced, not bureaucratic. Example between sections: *"OK, got a picture of the project. Let me ask about how you work day-to-day."*
-- **Adjust register early.** If their Q4 answer (relationship to code) suggests "not a developer," drop technical vocabulary (hooks, MCP, skills, permissions) from the rest of the conversation immediately.
+> *"Tell me what you're working on and what a typical session looks like."*
 
-### Infer and confirm — don't re-ask
+Then stop. Let them describe it in their own words, their own order, their own level of detail. Don't redirect. Don't prompt for specifics yet. Just listen.
 
-If an answer makes one or more later questions obvious, **infer the answer and confirm in one sentence**, then move on to questions that aren't covered.
+### Follow what they say
 
-Example: user says *"I'm building a Figma plugin for our design team on a 6-week sprint."* That answers Q1 (plugin), Q2 (active build), Q3 (team), partially Q8 (Figma in the tool list), and hints at Q15 (time pressure). Don't re-ask any of those. Instead say:
+As they talk, build a mental picture of their actual workflow — not a filled-in form. Notice:
 
-> *"Based on that I'll mark this as a Figma plugin you're actively building for your design team, with some time pressure. Sound right?"*
+- **What they're building and why** — what problem does it solve, who uses it?
+- **Who they are** — developer, designer, analyst, researcher, someone who inherited this codebase and has to maintain it?
+- **The actual sequence of their day** — what do they open first? What comes next? What's the last thing before they stop?
+- **The tools they touch** — what else is open while they work on this?
+- **Where it slows down** — listen for sighs, "I always have to...", "the annoying part is...", "I wish..."
+- **Handoffs** — what do they pass to someone else, or wait for from someone else?
 
-Then continue with Q4–Q7 and Q9–Q14 and Q16. The point is to feel like a smart researcher, not a form-filling robot.
+When something interesting surfaces, ask about it — not a prepared question, a human follow-up:
 
-### The questionnaire
+- They mention a tool → *"What does that look like day-to-day? What do you usually do with it?"*
+- They describe a sequence → *"And after that — what happens next?"*
+- They describe friction → *"How often does that come up? What does it cost you?"*
+- They mention a handoff → *"What's involved in getting it ready to hand off?"*
+- They use "usually" or "sometimes" → *"What makes it different when it's not that way?"*
+- They use an unfamiliar term → *"What's [term] in your context?"*
 
-**Section A — Orient (project + user)**
+The goal is to understand their workflow well enough to build tools that fit it precisely. A photographer who culls RAW files in Lightroom, edits selects, and syncs to a client gallery needs completely different tools than a backend developer on a CI-heavy team — and neither maps neatly to a dropdown option.
 
-**Q1. Project type.** AskUserQuestion: *"What best describes this project?"* Options: web app / CLI tool or script / library or package / data pipeline or analysis / writing, notes, or research / design system or plugin / something else. → CLAUDE.md project header.
+**Adjust register.** If the conversation suggests they're not a developer, drop technical vocabulary permanently: no "hooks", "MCP", "permissions", "skills", "schemas", "frontmatter". Shift to plain language and stay there for the rest of onboarding.
 
-**Q2. Lifecycle stage.** AskUserQuestion: *"Where is it in its life?"* Options: just starting / actively building / maintaining / experimenting. → Tone register; whether to scaffold deploy skills.
+**Infer and confirm.** When something becomes obvious from what they said, confirm it rather than re-asking. Example: *"I'm building a Figma plugin for our design team on a 6-week sprint"* tells you project type, lifecycle, audience, tool ecosystem, and time pressure. Say: *"So a Figma plugin, actively being built for your design team, with a deadline — sound right?"* Then only ask about what's still missing.
 
-**Q3. Audience.** AskUserQuestion: *"Who's it for?"* Options: just me / my team / external users or customers / open-source / mixed. → Conditional questions later (Q16 only if team or customers); CLAUDE.md framing.
+### Coverage check
 
-**Q4. The user themselves.** AskUserQuestion: *"How would you describe yourself?"* Options: I write code daily / I code sometimes / I'm not really a developer / I'm learning to code. → Register shift; user-level verbosity default.
+Once the conversation feels complete, scan for gaps before moving on. You need confident answers to all of these:
 
-**Section B — Working day**
+| What you need | Artifact it feeds | Ask if missing |
+|---|---|---|
+| What the project is and does | CLAUDE.md | *"What's the one-sentence version of what this does?"* |
+| How to run, test, build | CLAUDE.md | *"How do you run it? How do you check if something's working?"* |
+| Who they are (developer or not) | Register, ~/.claude/CLAUDE.md | *"Is writing code something you do every day, or more occasionally?"* |
+| Who it's for | CLAUDE.md, conditional questions | *"Who ends up using this?"* |
+| Where they are in the lifecycle | CLAUDE.md tone | *"Is this still being actively built, or more in maintenance?"* |
+| Tools they use alongside this | Integration suggestions | *"What else do you have open when you're working on this?"* |
+| Their communication preferences | ~/.claude/CLAUDE.md | *"How do you want me to talk — brief and direct, or with more explanation?"* |
+| Things that are off-limits | CLAUDE.md Constraints, settings.json | *"Anything I should never touch — files, folders, areas to avoid?"* |
 
-Transition: *"Got a picture of the project. Let me ask about how you work day-to-day."*
+**Three questions to always ask directly** if the conversation hasn't already covered them:
 
-**Q5. Session shape.** AskUserQuestion (multi-select): *"What do you usually start a Claude Code session with?"* Options: writing new code / fixing bugs / understanding existing code / writing tests / writing docs / design work / planning / something else. → Skill suggestions.
+**Constraints** (always): *"Anything I should never touch — files, folders, or areas that are off-limits?"*
 
-**Q6. Slowdowns.** AskUserQuestion (multi-select): *"What slows you down most?"* Options: setup or config / writing tests / explaining context to Claude / merge conflicts / waiting for builds or CI / code review / nothing in particular. → Project-specific skill candidates (e.g., session-start hook if "explaining context"; safety-net push if "merge conflicts").
+**Compliance** (only if they mentioned a team, customers, or a regulated industry): *"Any rules you have to follow — privacy laws, accessibility standards, anything like that?"*
 
-**Q7. Wishes.** Free text (skip-able): *"Anything you wish just happened automatically? Anything you'd love to stop doing manually?"* → Direct skill candidate input.
+**Safety net** (only if git state is 3): *"Want a safety net for undoing changes? I can add two simple commands: `/checkpoint` (save a snapshot you can come back to) and `/undo` (reverse the last thing I did). Both use git but you don't need to know git to use them."* Options: yes, add them (recommended) / not now — ask me later / no, skip it.
 
-**Section C — Tools and integrations**
+If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by git. If you ever want a safety net for undoing changes, just say so and I can set that up."* If git state is (1), say nothing.
 
-**Q8. Tool ecosystem.** AskUserQuestion (multi-select): *"What other tools are involved in your work?"* Options: Slack / GitHub / Linear / Figma / Notion / a database / a deploy pipeline / none / something else. → MCP server mentions in handoff (Slack, Linear, Figma plugins are available); integration nudges.
-
-**Section D — Communication, help shape, and direction**
-
-**Q9. Communication style.** AskUserQuestion: *"How do you want me to talk?"* Options: terse — just do it / brief — narrate key choices / explain as you go. → User-level CLAUDE.md verbosity.
-
-**Q10. Kind of help wanted.** AskUserQuestion (multi-select): *"Where do you most want help?"* Options: pair programmer (work alongside me) / autopilot (just do it) / proofreader (catch mistakes) / explainer (help me understand) / planner (help me think first) / I'm not sure, surprise me. → Drives Claude's default proactivity and which skills get prominence in /help-me.
-
-**Q11. Areas to improve / unstuck on.** AskUserQuestion (multi-select): *"What do you most want to get better at, or get unstuck on?"* Options: testing / understanding existing code / git / structuring projects / deployment / code review / writing docs / nothing in particular. → The single most useful signal for which custom skills to scaffold. If they pick something, build a relevant skill in Phase 4. If "nothing in particular," do NOT manufacture skills.
-
-**Section E — Risk and constraints**
-
-Transition: *"Last bits — what should I avoid?"*
-
-**Q12. Off-limits areas.** Free text (skip-able): *"Anything Claude should never touch? Files, folders, parts of the project to keep hands off?"* → CLAUDE.md Constraints + settings.json deny rules.
-
-**Q13. Past incidents to prevent.** Free text (skip-able): *"Has anything gone wrong before that you'd want to make sure doesn't happen again?"* → CLAUDE.md Constraints (incident-specific).
-
-**Section F — Conditional questions**
-
-These only fire when an earlier answer makes them relevant.
-
-**Q14. Shipping cadence.** AskUserQuestion (only if Q2 = actively building OR maintaining): *"How often does this ship?"* Options: multiple times a day / weekly / monthly / when it's ready / never, internal only. → Deploy skills + CI hook suggestions.
-
-**Q15. Compliance.** AskUserQuestion (multi-select, only if Q3 = team OR customers): *"Any rules you have to follow?"* Options: GDPR / HIPAA / SOC2 / PCI / financial regulations / accessibility (WCAG) / company-internal rules / none. → settings.json deny rules, CLAUDE.md Constraints, curator's review dimensions.
-
-**Q16. Safety net.** AskUserQuestion (only if git state is 3 — installed and a repo): *"Want a safety net for taking back changes? I can add two simple commands: `/checkpoint` (save a snapshot you can come back to) and `/undo` (reverse the last thing I did). Both use git behind the scenes but you don't need to know git to use them."* Options: yes, add them (recommended) / not now — ask me later / no, skip it. → Activates `/undo` and `/checkpoint` skills.
-
-If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by git. If you ever want a safety net for undoing changes, just say so and I can set that up."* If git state is (1), say nothing about the safety net.
-
-Record the Q16 decision in onboarding-log.md (Phase 6). On "yes," activate the safety-net skills in Phase 4. On "not now," remember to re-ask on next refresh. On "no," skip the question entirely on future refreshes.
+Record the safety-net decision in onboarding-log.md (Phase 6). On "yes," activate the safety-net skills in Phase 4. On "not now," re-ask on next refresh. On "no," skip on future refreshes.
 
 ### Listening for skill candidates
 
-As you go, actively listen for:
+As you go, notice and mentally flag:
 
-- Repeated sequences (e.g., "I always run tests then lint then commit") → candidate for a custom command in Phase 4.
-- Things they re-explain each session → candidate for project memory.
-- Handoff points (CI, teammates, review) → candidate for an automated workflow.
-- Frustrations from Q6 / Q7 / Q11 → direct skill candidates.
+- Repeated sequences ("I always run tests then lint then commit") → possible skill
+- Things they re-explain every session → possible project memory or context-loading skill
+- Handoff points (CI, teammates, external tools) → possible workflow skill or agent
+- Frustrations and wishes they describe → direct candidates
+- Multi-step processes with no obvious human decision point in the middle → possible agent rather than skill
 
-**Hard rule: don't manufacture skills.** Only build a project-specific skill in Phase 4 if at least one answer directly motivated it. If discovery surfaced no clear candidate, ship with only the always-active skills. A clean, smaller setup is better than a noisy one full of skills the user will never invoke.
+Don't filter during the conversation — just notice. The synthesis step is where you reason through what to build.
+
+**Hard rule: don't manufacture.** Only build something if the user's actual description motivated it. If they described nothing that genuinely warrants a skill, ship with the always-active skills. A clean small setup beats a noisy one nobody invokes.
+
+### Skills vs agents
+
+Before synthesising candidates, know which format to reach for:
+
+**Build a skill when** the user initiates it and stays in the loop at each step:
+- "run my test-lint-commit sequence" → `/ship`
+- "review this design and tell me what to build" → `/design-review`
+- "help me draft this doc" → `/draft`
+
+Skills live at `.claude/skills/<name>/SKILL.md`. They appear in `/help-me` and are invoked by typing or saying their name.
+
+**Build a subagent when** the task runs autonomously, involves many steps, or is called *by* other skills rather than directly by the user:
+- Surveys all component files and produces a consistency report → agent
+- Drafts release notes from git history when `/ship` fires → agent called by `/ship`, not directly by user
+- Reads external data sources and synthesises a summary → agent
+
+Subagents live at `.claude/agents/<name>.md`. They don't appear in `/help-me` but skills and Claude itself can invoke them by name.
+
+### Synthesise candidates
+
+After finishing the questionnaire — but before moving to Phase 3 — take a deliberate beat. Read back through everything the user told you and ask:
+
+> *"If this person opened Claude Code tomorrow already equipped for their work, what tools would they have that they don't have today?"*
+
+For each candidate that surfaces from this question:
+
+1. **Name the specific workflow** — be precise ("they pull a Figma spec and check it against existing components before writing code", not "they design things")
+2. **Skill or agent?** Use the distinction above.
+3. **Name it in their vocabulary** — use the words they actually used, not generic labels
+4. **Any natural companion?** Does it pair with a create/review counterpart, a plan/execute counterpart, etc. (see Skill families)
+
+Then consult the common patterns below to see if any of your candidates match a known pattern — if so, use that pattern's name and structure. Also use the table to catch anything the interview might not have surfaced explicitly.
+
+A nurse who uses Epic and sends shift notes via Teams. A musician recording in Logic who publishes stems to a shared drive. A data journalist scraping, cleaning, and publishing in a tight loop. The synthesis step is where you build for *their* actual workflow — the table is a reference, not a boundary.
+
+If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome, not a failure.
+
+### Common patterns (examples, not a checklist)
+
+These are known-useful patterns. Match against them during synthesis if they fit. If the user's workflow doesn't map to any row but clearly warrants something, build it anyway.
+
+Skills with **+** are families: build both and wire them together (see "Skill families" below).
+
+| Discovery signal | Skills to build | Slash names | Natural-language triggers |
+|---|---|---|---|
+| Q5 includes "planning" OR Q10 includes "planner" | Plan-then-execute family: think it through, then run it | `/plan` **+** `/ship` | "plan this out", "before we build this", "ship this", "execute the plan" |
+| Q5 includes "design work" OR Q8 includes "Figma" | Design family: review a design, then scaffold from it | `/design-review` **+** `/create-component` | "review this design", "write a spec for this", "create a component", "build this from Figma" |
+| Q5 includes "writing tests" OR Q11 includes "testing" | Test generation for a file, function, or feature | `/test` | "write tests for this", "add test coverage", "how should I test this" |
+| Q5 includes "writing docs" OR Q11 includes "writing docs" | Doc generation or improvement for code or a feature | `/docs` | "document this", "write docs for", "add a README" |
+| Q6 includes "explaining context to Claude" | SessionStart hook addition that auto-loads key context each session | (hook, no slash) | (automatic on session start) |
+| Q6 includes "merge conflicts" OR Q11 includes "git" | Git help: untangle conflicts, explain git state, suggest safe next steps | `/git-help` | "help me with this conflict", "what does git say", "I'm confused about git" |
+| Q6 includes "waiting for builds or CI" | CI family: check status, then fix failures | `/ci` **+** `/fix-ci` | "what's CI doing", "check the build", "what failed", "fix that CI error" |
+| Q7 or Q5 mentions a repeated sequence (e.g. tests → lint → commit) | Ship skill that runs the user's exact sequence in one command | `/ship` | "ship this", "commit and push", the phrase they actually used in Q7 |
+| Q1 = "writing, notes, or research" | Writing family: scaffold a document, then refine it | `/draft` **+** `/edit-draft` | "draft this", "outline this", "help me write", "edit my draft", "tighten this up" |
+| Q1 = "data pipeline or analysis" | Analysis helper: loads data context, suggests next steps, explains results | `/analyze` | "analyze this", "what does this data say", "help me understand this dataset" |
+| Q8 includes "Linear" | Issue triage and status summary | `/triage` | "triage my issues", "what should I work on", "prioritize these" |
+| Q8 includes "Slack" | Standup draft from recent git activity | `/standup` | "draft my standup", "what did I do today", "write my update" |
+| Q8 includes "a deploy pipeline" OR Q14 = multiple times a day / weekly | Deploy family: check CI, then deploy | `/ci` **+** `/deploy` | "deploy this", "ready to ship", "push to production", "check before I deploy" |
+| Q11 includes "understanding existing code" | Code explainer: plain-language explanation of a file, function, or pattern | `/explain` | "explain this code", "walk me through this", "what does this do" |
+| Q11 includes "code review" | Review-then-ship family: flag issues, then merge | `/review` **+** `/ship` | "review my PR", "check my changes", "look at this diff", "ship this" |
+
+If multiple signals fire and produce different families, build all families. If two signals both generate the same skill (e.g. Q7 and Q11 both trigger `/ship`), build it once.
+
+### Skill families
+
+When two skills cover complementary sides of the same workflow (create ↔ review, plan ↔ ship, draft ↔ edit), build them as a family. A pair that knows about each other is more useful than two isolated skills.
+
+**Shared context step.** Family members usually need the same setup — loading the design spec, reading the component library, checking git state. Write that setup as an identical Step 1 in every family member. Don't abstract it away; just make the step the same so any skill in the family can be invoked cold and still works.
+
+Example (design family):
+```
+## Step 1: Load design context
+Read CLAUDE.md for component conventions. If a Figma link or spec file is mentioned in the conversation, note it. If not, ask: "Which component or design are we working with?"
+```
+
+Both `/design-review` and `/create-component` open with this identical step.
+
+**Cross-references.** Each skill ends by suggesting its companion at the right moment:
+- After `/design-review` surfaces issues: *"When you're ready to scaffold the fix, say 'create a component'."*
+- After `/create-component` finishes: *"Want to review what we just built? Say 'review this component'."*
+- After `/plan` produces a plan: *"When you're ready to run it, say 'ship this'."*
+- After `/draft` produces a draft: *"Say 'edit my draft' when you want a tightening pass."*
+
+Add these as a `## See also` section at the bottom of each family member's SKILL.md.
+
+**Hub skill (when warranted).** If a family has 2+ companions and the user's entry point is always the same intent ("let's work on this component"), generate a lightweight hub skill that dispatches based on what they actually ask:
+
+```
+---
+description: Route component work — build a new one or review an existing one
+allowed-tools: Skill
+---
+
+You are the `/component` skill.
+
+## Triggers
+- Slash form: `/component`
+- Natural language: "work on a component", "let's do this component"
+
+## What you do
+Ask once: "Should I build a new component or review an existing one?" Then invoke
+the right companion via the Skill tool: `/create-component` or `/review-component`.
+If the user's message already makes the intent clear, skip the question and dispatch directly.
+```
+
+Only build a hub when 2+ family members exist AND a shared entry point would genuinely reduce friction. Don't build a hub just to have one.
 
 ### When discovery is done
 
-You've finished Phase 2 when you have a confident answer (asked OR inferred-and-confirmed) to each of:
-- Q1–Q4 (orientation)
-- Q5–Q7 (working day)
-- Q8 (tools)
-- Q9–Q11 (communication and direction)
-- Q12–Q13 (constraints)
-- Q14 (only if conditional triggered)
-- Q15 (only if conditional triggered)
-- Q16 (only if conditional triggered)
+Phase 2 is complete when:
+- The coverage check table is fully satisfied (asked or inferred)
+- The three always-ask questions have been addressed
+- You've run the synthesis step below and have a list of skill/agent candidates (even if that list is empty)
 
-In practice that's 10–14 questions actually asked, with 2–4 inferred. Real conversation pace: 8–12 turns of dialogue.
+Real conversation pace: 5–10 turns of dialogue. It should feel like a conversation that reached a natural end, not a form that got submitted.
 
 ### Escape hatch
 
-If the user explicitly says "I don't know" or "just pick something" or "skip it" on multiple separate questions in a row, OR explicitly asks you to "just do your best," stop interviewing and say: *"No problem — I'll make sensible defaults and you can tell me to change anything later."* Then proceed to Phase 3 with what you have. A single confident answer is NOT the trigger.
+If the user says "I don't know" or "just pick something" or "skip it" repeatedly, or asks you to "just do your best," stop and say: *"No problem — I'll make sensible defaults and you can tell me to change anything later."* Then proceed to Phase 3 with what you have.
 
 ## Phase 3: Consult the curator on methodology
 
@@ -212,17 +303,100 @@ Configure for this project:
 - SessionStart hook: already configured for git context and environment detection — preserve it, extend if needed
 - Additional hooks if the workflow calls for them
 
-### Project-specific skills
-This is where the discovery pays off. For each repeated sequence, frustration, or handoff point you identified in Phase 2, decide whether it warrants a skill. Build the ones that will make a real difference — don't create skills for the sake of it.
+### Project-specific skills and agents
 
-Examples of what good discovery might surface:
-- They re-explain context every session → a SessionStart hook that loads it automatically
-- They always run the same test-then-lint-then-commit sequence → a /ship skill
-- They review overnight changes each morning → a /standup skill  
-- They frequently onboard others to the codebase → an /explain skill
-- They have a multi-step deploy process → a /deploy skill
+This is where the synthesis pays off. For each candidate from the Phase 2 synthesis, build it — as a skill or agent depending on what fits.
 
-For each skill you create, tell the user in the handoff what it does and when to use it.
+**Skill format.** Each skill lives at `.claude/skills/<name>/SKILL.md`:
+
+```
+---
+description: <one-line description: what it does and when — this appears in /help-me>
+disable-model-invocation: true
+allowed-tools: <only what this skill needs: Read Write Edit Bash Skill etc.>
+---
+
+You are the `/<name>` skill. <one-sentence purpose.>
+
+## Triggers
+
+- Slash form: `/<name> [optional args]`
+- Natural language: "<phrase 1>", "<phrase 2>", "<phrase 3>"
+
+## What you do
+
+<2–4 sentences in this user's terms. Name their actual tools, workflows, and pain points.>
+
+## Steps
+
+### Step 1: Load context
+<shared setup — identical across family members if this skill has companions>
+
+### Step 2: [main action]
+<specific instruction>
+
+### Step 3: [next action if needed]
+<specific instruction>
+
+## Hard rules
+
+- [any firm constraint]
+
+## See also
+
+<omit if no family. If it has companions:>
+- `/<companion>` — <when to reach for it instead of or after this one>
+```
+
+**Agent format.** Each agent lives at `.claude/agents/<name>.md`:
+
+```
+---
+description: <one-line description — what it does and what invokes it>
+allowed-tools: <tools it needs: Read Bash WebSearch Agent etc.>
+---
+
+You are the `<name>` agent. <one-sentence purpose.>
+
+## When you're invoked
+
+<What triggers this agent — a skill calling it, the user naming it, a hook, etc.>
+
+## What you do
+
+<Description in this user's terms. Be specific about their tools and data.>
+
+## Steps
+
+### Step 1: [first autonomous action]
+<instruction>
+
+### Step 2: [next action]
+<instruction>
+
+## Output
+
+<What you return or write when done — a file, a summary, a decision, etc.>
+
+## Hard rules
+
+- [any firm constraint]
+```
+
+**Make everything feel handcrafted, not generic.** Discovery exists so the output is specific:
+
+- A `/design-review` skill for a Figma-using designer should name Figma files, component naming conventions, and exactly the kind of review they said they need
+- A `/ship` skill should embed the exact command sequence the user described in Q7, not assume defaults
+- A `changelog-writer` agent invoked by `/ship` should know the project's changelog format and commit conventions
+- A `/standup` skill for a Slack user should format the update the way they said they share it with their team
+
+Use their actual words. A user who said "I just want to say 'go' and have it run everything" should find that `/ship` responds to "go".
+
+**Minimum.** If synthesis surfaced candidates, build at least 1–2 before handoff. A user who described their workflow and left with no custom tools will wonder why they answered all those questions.
+
+**Natural-language triggers matter more than slash commands.** Include at least 2–3 trigger phrases. If they said "I wish I could just say X", make X a trigger.
+
+For each skill or agent you create, add a bullet in the handoff (Phase 7) explaining what it does and how to invoke it.
 
 ### Skills setup (always-active)
 
