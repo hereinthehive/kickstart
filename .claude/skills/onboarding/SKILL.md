@@ -143,20 +143,60 @@ Record the Q16 decision in onboarding-log.md (Phase 6). On "yes," activate the s
 
 ### Listening for skill candidates
 
-As you go, actively listen for:
+As you go, notice and mentally flag:
 
-- Repeated sequences (e.g., "I always run tests then lint then commit") → candidate for a custom command in Phase 4.
-- Things they re-explain each session → candidate for project memory.
-- Handoff points (CI, teammates, review) → candidate for an automated workflow.
-- Frustrations from Q6 / Q7 / Q11 → direct skill candidates.
+- Repeated sequences ("I always run tests then lint then commit") → possible skill
+- Things they re-explain every session → possible project memory or context-loading skill
+- Handoff points (CI, teammates, external tools) → possible workflow skill or agent
+- Frustrations and wishes from Q6/Q7/Q11 → direct candidates
+- Multi-step processes with no obvious human decision point in the middle → possible agent rather than skill
 
-**Hard rule: don't manufacture skills.** Only build a project-specific skill in Phase 4 if at least one answer directly motivated it. If discovery surfaced no clear candidate, ship with only the always-active skills. A clean, smaller setup is better than a noisy one full of skills the user will never invoke.
+Don't filter aggressively during the interview — just notice. You'll reason through candidates after the questionnaire is done.
 
-### Skill candidate map
+**Hard rule: don't manufacture.** Only build something if the user's actual description motivated it. If they described nothing that genuinely warrants a skill, ship with the always-active skills. A clean small setup beats a noisy one nobody invokes.
 
-Use this as a lookup during Phase 2. When a signal fires, flag it as a build item for Phase 4. Most users will trigger 1–3 entries — build all of them.
+### Skills vs agents
 
-Skills with a **Build with** entry are families: build both the primary and its companion together (see "Skill families" below for why and how).
+Before synthesising candidates, know which format to reach for:
+
+**Build a skill when** the user initiates it and stays in the loop at each step:
+- "run my test-lint-commit sequence" → `/ship`
+- "review this design and tell me what to build" → `/design-review`
+- "help me draft this doc" → `/draft`
+
+Skills live at `.claude/skills/<name>/SKILL.md`. They appear in `/help-me` and are invoked by typing or saying their name.
+
+**Build a subagent when** the task runs autonomously, involves many steps, or is called *by* other skills rather than directly by the user:
+- Surveys all component files and produces a consistency report → agent
+- Drafts release notes from git history when `/ship` fires → agent called by `/ship`, not directly by user
+- Reads external data sources and synthesises a summary → agent
+
+Subagents live at `.claude/agents/<name>.md`. They don't appear in `/help-me` but skills and Claude itself can invoke them by name.
+
+### Synthesise candidates
+
+After finishing the questionnaire — but before moving to Phase 3 — take a deliberate beat. Read back through everything the user told you and ask:
+
+> *"If this person opened Claude Code tomorrow already equipped for their work, what tools would they have that they don't have today?"*
+
+For each candidate that surfaces from this question:
+
+1. **Name the specific workflow** — be precise ("they pull a Figma spec and check it against existing components before writing code", not "they design things")
+2. **Skill or agent?** Use the distinction above.
+3. **Name it in their vocabulary** — use the words they actually used, not generic labels
+4. **Any natural companion?** Does it pair with a create/review counterpart, a plan/execute counterpart, etc. (see Skill families)
+
+Then consult the common patterns below to see if any of your candidates match a known pattern — if so, use that pattern's name and structure. Also use the table to catch anything the interview might not have surfaced explicitly.
+
+A nurse who uses Epic and sends shift notes via Teams. A musician recording in Logic who publishes stems to a shared drive. A data journalist scraping, cleaning, and publishing in a tight loop. The synthesis step is where you build for *their* actual workflow — the table is a reference, not a boundary.
+
+If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome, not a failure.
+
+### Common patterns (examples, not a checklist)
+
+These are known-useful patterns. Match against them during synthesis if they fit. If the user's workflow doesn't map to any row but clearly warrants something, build it anyway.
+
+Skills with **+** are families: build both and wire them together (see "Skill families" below).
 
 | Discovery signal | Skills to build | Slash names | Natural-language triggers |
 |---|---|---|---|
@@ -282,17 +322,17 @@ Configure for this project:
 - SessionStart hook: already configured for git context and environment detection — preserve it, extend if needed
 - Additional hooks if the workflow calls for them
 
-### Project-specific skills
+### Project-specific skills and agents
 
-This is where the discovery pays off. For each candidate flagged in Phase 2's skill candidate map, build the skill. Don't skip them — the map is calibrated to only surface skills with real payoff.
+This is where the synthesis pays off. For each candidate from the Phase 2 synthesis, build it — as a skill or agent depending on what fits.
 
-**Skill format.** Each skill lives at `.claude/skills/<name>/SKILL.md`. Write each file with this structure:
+**Skill format.** Each skill lives at `.claude/skills/<name>/SKILL.md`:
 
 ```
 ---
 description: <one-line description: what it does and when — this appears in /help-me>
 disable-model-invocation: true
-allowed-tools: <only the tools this skill actually needs: Read Write Edit Bash Skill etc.>
+allowed-tools: <only what this skill needs: Read Write Edit Bash Skill etc.>
 ---
 
 You are the `/<name>` skill. <one-sentence purpose.>
@@ -304,42 +344,78 @@ You are the `/<name>` skill. <one-sentence purpose.>
 
 ## What you do
 
-<2–4 sentences describing what this skill does in this specific user's terms. Reference their actual tools, workflows, and pain points — not generic descriptions.>
+<2–4 sentences in this user's terms. Name their actual tools, workflows, and pain points.>
 
 ## Steps
 
 ### Step 1: Load context
-<shared setup step — identical to family members if this skill belongs to a family>
+<shared setup — identical across family members if this skill has companions>
 
 ### Step 2: [main action]
 <specific instruction>
 
-### Step 3: [next action]
+### Step 3: [next action if needed]
 <specific instruction>
 
 ## Hard rules
 
-- [any firm constraint specific to this skill]
+- [any firm constraint]
 
 ## See also
 
-<omit this section if the skill has no family. If it does, list companion skills with a one-line hint about when to reach for each:>
-- `/<companion>` — <when to use it instead of or after this one>
+<omit if no family. If it has companions:>
+- `/<companion>` — <when to reach for it instead of or after this one>
 ```
 
-**Make skills feel handcrafted, not generic.** The discovery interview exists so skills can be specific. Use what you learned:
+**Agent format.** Each agent lives at `.claude/agents/<name>.md`:
 
-- A `/design-review` skill for a Figma-using designer should reference Figma files, component naming, and the specific kind of feedback they said they need — not "review a design."
-- A `/ship` skill should run the exact sequence the user described in Q7 (their actual test/lint/commit commands), not assume defaults.
-- A `/standup` skill for a Slack user should know their team context and format the update the way they described they share it.
+```
+---
+description: <one-line description — what it does and what invokes it>
+allowed-tools: <tools it needs: Read Bash WebSearch Agent etc.>
+---
 
-Incorporate their actual words and tools into the skill content. A user who said "I always do X before committing" should find `/ship` already knows what X is.
+You are the `<name>` agent. <one-sentence purpose.>
 
-**Minimum viable skills.** If discovery surfaced candidates, build at least 1–2 before handoff. A user who spent time describing their workflow and left with no custom skills will wonder why they answered all those questions.
+## When you're invoked
 
-**Natural-language triggers matter most.** Slash commands are shortcuts; natural language is how most people invoke skills. Include at least 2–3 trigger phrases. If they said "I wish I could just say 'ship it'", use that exact phrase as a trigger.
+<What triggers this agent — a skill calling it, the user naming it, a hook, etc.>
 
-For each skill you create, add a bullet in the handoff (Phase 7) explaining what it does and what to say to invoke it.
+## What you do
+
+<Description in this user's terms. Be specific about their tools and data.>
+
+## Steps
+
+### Step 1: [first autonomous action]
+<instruction>
+
+### Step 2: [next action]
+<instruction>
+
+## Output
+
+<What you return or write when done — a file, a summary, a decision, etc.>
+
+## Hard rules
+
+- [any firm constraint]
+```
+
+**Make everything feel handcrafted, not generic.** Discovery exists so the output is specific:
+
+- A `/design-review` skill for a Figma-using designer should name Figma files, component naming conventions, and exactly the kind of review they said they need
+- A `/ship` skill should embed the exact command sequence the user described in Q7, not assume defaults
+- A `changelog-writer` agent invoked by `/ship` should know the project's changelog format and commit conventions
+- A `/standup` skill for a Slack user should format the update the way they said they share it with their team
+
+Use their actual words. A user who said "I just want to say 'go' and have it run everything" should find that `/ship` responds to "go".
+
+**Minimum.** If synthesis surfaced candidates, build at least 1–2 before handoff. A user who described their workflow and left with no custom tools will wonder why they answered all those questions.
+
+**Natural-language triggers matter more than slash commands.** Include at least 2–3 trigger phrases. If they said "I wish I could just say X", make X a trigger.
+
+For each skill or agent you create, add a bullet in the handoff (Phase 7) explaining what it does and how to invoke it.
 
 ### Skills setup (always-active)
 
