@@ -156,25 +156,71 @@ As you go, actively listen for:
 
 Use this as a lookup during Phase 2. When a signal fires, flag it as a build item for Phase 4. Most users will trigger 1–3 entries — build all of them.
 
-| Discovery signal | Skill to build | Slash name | Natural-language triggers |
+Skills with a **Build with** entry are families: build both the primary and its companion together (see "Skill families" below for why and how).
+
+| Discovery signal | Skills to build | Slash names | Natural-language triggers |
 |---|---|---|---|
-| Q5 includes "planning" OR Q10 includes "planner" | Think-first skill that structures a problem before writing code | `/plan` | "plan this out", "help me think through", "before we build this" |
-| Q5 includes "design work" OR Q8 includes "Figma" | Design review: check consistency, generate a dev spec, surface open questions about the design | `/design-review` | "review this design", "write a spec for this", "what should I build from this" |
+| Q5 includes "planning" OR Q10 includes "planner" | Plan-then-execute family: think it through, then run it | `/plan` **+** `/ship` | "plan this out", "before we build this", "ship this", "execute the plan" |
+| Q5 includes "design work" OR Q8 includes "Figma" | Design family: review a design, then scaffold from it | `/design-review` **+** `/create-component` | "review this design", "write a spec for this", "create a component", "build this from Figma" |
 | Q5 includes "writing tests" OR Q11 includes "testing" | Test generation for a file, function, or feature | `/test` | "write tests for this", "add test coverage", "how should I test this" |
 | Q5 includes "writing docs" OR Q11 includes "writing docs" | Doc generation or improvement for code or a feature | `/docs` | "document this", "write docs for", "add a README" |
-| Q6 includes "explaining context to Claude" | SessionStart hook addition that auto-loads key context from a project file each session | (hook, no slash) | (automatic on session start) |
+| Q6 includes "explaining context to Claude" | SessionStart hook addition that auto-loads key context each session | (hook, no slash) | (automatic on session start) |
 | Q6 includes "merge conflicts" OR Q11 includes "git" | Git help: untangle conflicts, explain git state, suggest safe next steps | `/git-help` | "help me with this conflict", "what does git say", "I'm confused about git" |
-| Q6 includes "waiting for builds or CI" | CI summary: show what's running, what failed, what to fix | `/ci` | "what's CI doing", "check the build", "what failed" |
+| Q6 includes "waiting for builds or CI" | CI family: check status, then fix failures | `/ci` **+** `/fix-ci` | "what's CI doing", "check the build", "what failed", "fix that CI error" |
 | Q7 or Q5 mentions a repeated sequence (e.g. tests → lint → commit) | Ship skill that runs the user's exact sequence in one command | `/ship` | "ship this", "commit and push", the phrase they actually used in Q7 |
-| Q1 = "writing, notes, or research" | Draft/outline generator for documents and notes | `/draft` | "draft this", "outline this", "help me write" |
+| Q1 = "writing, notes, or research" | Writing family: scaffold a document, then refine it | `/draft` **+** `/edit-draft` | "draft this", "outline this", "help me write", "edit my draft", "tighten this up" |
 | Q1 = "data pipeline or analysis" | Analysis helper: loads data context, suggests next steps, explains results | `/analyze` | "analyze this", "what does this data say", "help me understand this dataset" |
 | Q8 includes "Linear" | Issue triage and status summary | `/triage` | "triage my issues", "what should I work on", "prioritize these" |
 | Q8 includes "Slack" | Standup draft from recent git activity | `/standup` | "draft my standup", "what did I do today", "write my update" |
-| Q8 includes "a deploy pipeline" OR Q14 = multiple times a day / weekly | Deploy checklist walkthrough | `/deploy` | "deploy this", "ready to ship", "push to production" |
+| Q8 includes "a deploy pipeline" OR Q14 = multiple times a day / weekly | Deploy family: check CI, then deploy | `/ci` **+** `/deploy` | "deploy this", "ready to ship", "push to production", "check before I deploy" |
 | Q11 includes "understanding existing code" | Code explainer: plain-language explanation of a file, function, or pattern | `/explain` | "explain this code", "walk me through this", "what does this do" |
-| Q11 includes "code review" | PR/diff review that flags issues and suggests improvements | `/review` | "review my PR", "check my changes", "look at this diff" |
+| Q11 includes "code review" | Review-then-ship family: flag issues, then merge | `/review` **+** `/ship` | "review my PR", "check my changes", "look at this diff", "ship this" |
 
-If multiple signals fire, build multiple skills — one per workflow. Don't collapse unrelated workflows into a single skill.
+If multiple signals fire and produce different families, build all families. If two signals both generate the same skill (e.g. Q7 and Q11 both trigger `/ship`), build it once.
+
+### Skill families
+
+When two skills cover complementary sides of the same workflow (create ↔ review, plan ↔ ship, draft ↔ edit), build them as a family. A pair that knows about each other is more useful than two isolated skills.
+
+**Shared context step.** Family members usually need the same setup — loading the design spec, reading the component library, checking git state. Write that setup as an identical Step 1 in every family member. Don't abstract it away; just make the step the same so any skill in the family can be invoked cold and still works.
+
+Example (design family):
+```
+## Step 1: Load design context
+Read CLAUDE.md for component conventions. If a Figma link or spec file is mentioned in the conversation, note it. If not, ask: "Which component or design are we working with?"
+```
+
+Both `/design-review` and `/create-component` open with this identical step.
+
+**Cross-references.** Each skill ends by suggesting its companion at the right moment:
+- After `/design-review` surfaces issues: *"When you're ready to scaffold the fix, say 'create a component'."*
+- After `/create-component` finishes: *"Want to review what we just built? Say 'review this component'."*
+- After `/plan` produces a plan: *"When you're ready to run it, say 'ship this'."*
+- After `/draft` produces a draft: *"Say 'edit my draft' when you want a tightening pass."*
+
+Add these as a `## See also` section at the bottom of each family member's SKILL.md.
+
+**Hub skill (when warranted).** If a family has 2+ companions and the user's entry point is always the same intent ("let's work on this component"), generate a lightweight hub skill that dispatches based on what they actually ask:
+
+```
+---
+description: Route component work — build a new one or review an existing one
+allowed-tools: Skill
+---
+
+You are the `/component` skill.
+
+## Triggers
+- Slash form: `/component`
+- Natural language: "work on a component", "let's do this component"
+
+## What you do
+Ask once: "Should I build a new component or review an existing one?" Then invoke
+the right companion via the Skill tool: `/create-component` or `/review-component`.
+If the user's message already makes the intent clear, skip the question and dispatch directly.
+```
+
+Only build a hub when 2+ family members exist AND a shared entry point would genuinely reduce friction. Don't build a hub just to have one.
 
 ### When discovery is done
 
@@ -246,7 +292,7 @@ This is where the discovery pays off. For each candidate flagged in Phase 2's sk
 ---
 description: <one-line description: what it does and when — this appears in /help-me>
 disable-model-invocation: true
-allowed-tools: <only the tools this skill actually needs: Read Write Edit Bash Agent etc.>
+allowed-tools: <only the tools this skill actually needs: Read Write Edit Bash Skill etc.>
 ---
 
 You are the `/<name>` skill. <one-sentence purpose.>
@@ -262,15 +308,23 @@ You are the `/<name>` skill. <one-sentence purpose.>
 
 ## Steps
 
-### Step 1: [first concrete action]
+### Step 1: Load context
+<shared setup step — identical to family members if this skill belongs to a family>
+
+### Step 2: [main action]
 <specific instruction>
 
-### Step 2: [next action]
+### Step 3: [next action]
 <specific instruction>
 
 ## Hard rules
 
 - [any firm constraint specific to this skill]
+
+## See also
+
+<omit this section if the skill has no family. If it does, list companion skills with a one-line hint about when to reach for each:>
+- `/<companion>` — <when to use it instead of or after this one>
 ```
 
 **Make skills feel handcrafted, not generic.** The discovery interview exists so skills can be specific. Use what you learned:
