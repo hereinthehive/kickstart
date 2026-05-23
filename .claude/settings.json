@@ -16,10 +16,10 @@
     ],
     "ask": [
       "Bash(git commit:*)",
+      "Bash(git push:*)",
       "Bash(gh:*)"
     ],
     "deny": [
-      "Bash(git push:*)",
       "Bash(git clean:*)",
       "Bash(rm:*)",
       "Read(./.env)",
