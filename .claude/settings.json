@@ -1,7 +1,6 @@
 {
   "defaultMode": "default",
   "permissions": {
-    "defaultMode": "ask",
     "allow": [
       "Read",
       "Edit",
@@ -21,24 +20,8 @@
     ],
     "deny": [
       "Bash(git push:*)",
-      "Bash(gh pr create:*)",
-      "Bash(gh pr merge:*)",
-      "Bash(npm install:*)",
-      "Bash(npm i:*)",
-      "Bash(pnpm add:*)",
-      "Bash(pnpm install:*)",
-      "Bash(pnpm dlx:*)",
-      "Bash(yarn dlx:*)",
-      "Bash(yarn add:*)",
-      "Bash(yarn install:*)",
-      "Bash(pip install:*)",
-      "Bash(bun add:*)",
-      "Bash(bun install:*)",
-      "Bash(bunx:*)",
-      "Bash(npx:*)",
-      "Bash(cargo add:*)",
-      "Bash(rm:*)",
       "Bash(git clean:*)",
+      "Bash(rm:*)",
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)"
