@@ -152,6 +152,30 @@ As you go, actively listen for:
 
 **Hard rule: don't manufacture skills.** Only build a project-specific skill in Phase 4 if at least one answer directly motivated it. If discovery surfaced no clear candidate, ship with only the always-active skills. A clean, smaller setup is better than a noisy one full of skills the user will never invoke.
 
+### Skill candidate map
+
+Use this as a lookup during Phase 2. When a signal fires, flag it as a build item for Phase 4. Most users will trigger 1–3 entries — build all of them.
+
+| Discovery signal | Skill to build | Slash name | Natural-language triggers |
+|---|---|---|---|
+| Q5 includes "planning" OR Q10 includes "planner" | Think-first skill that structures a problem before writing code | `/plan` | "plan this out", "help me think through", "before we build this" |
+| Q5 includes "design work" OR Q8 includes "Figma" | Design review: check consistency, generate a dev spec, surface open questions about the design | `/design-review` | "review this design", "write a spec for this", "what should I build from this" |
+| Q5 includes "writing tests" OR Q11 includes "testing" | Test generation for a file, function, or feature | `/test` | "write tests for this", "add test coverage", "how should I test this" |
+| Q5 includes "writing docs" OR Q11 includes "writing docs" | Doc generation or improvement for code or a feature | `/docs` | "document this", "write docs for", "add a README" |
+| Q6 includes "explaining context to Claude" | SessionStart hook addition that auto-loads key context from a project file each session | (hook, no slash) | (automatic on session start) |
+| Q6 includes "merge conflicts" OR Q11 includes "git" | Git help: untangle conflicts, explain git state, suggest safe next steps | `/git-help` | "help me with this conflict", "what does git say", "I'm confused about git" |
+| Q6 includes "waiting for builds or CI" | CI summary: show what's running, what failed, what to fix | `/ci` | "what's CI doing", "check the build", "what failed" |
+| Q7 or Q5 mentions a repeated sequence (e.g. tests → lint → commit) | Ship skill that runs the user's exact sequence in one command | `/ship` | "ship this", "commit and push", the phrase they actually used in Q7 |
+| Q1 = "writing, notes, or research" | Draft/outline generator for documents and notes | `/draft` | "draft this", "outline this", "help me write" |
+| Q1 = "data pipeline or analysis" | Analysis helper: loads data context, suggests next steps, explains results | `/analyze` | "analyze this", "what does this data say", "help me understand this dataset" |
+| Q8 includes "Linear" | Issue triage and status summary | `/triage` | "triage my issues", "what should I work on", "prioritize these" |
+| Q8 includes "Slack" | Standup draft from recent git activity | `/standup` | "draft my standup", "what did I do today", "write my update" |
+| Q8 includes "a deploy pipeline" OR Q14 = multiple times a day / weekly | Deploy checklist walkthrough | `/deploy` | "deploy this", "ready to ship", "push to production" |
+| Q11 includes "understanding existing code" | Code explainer: plain-language explanation of a file, function, or pattern | `/explain` | "explain this code", "walk me through this", "what does this do" |
+| Q11 includes "code review" | PR/diff review that flags issues and suggests improvements | `/review` | "review my PR", "check my changes", "look at this diff" |
+
+If multiple signals fire, build multiple skills — one per workflow. Don't collapse unrelated workflows into a single skill.
+
 ### When discovery is done
 
 You've finished Phase 2 when you have a confident answer (asked OR inferred-and-confirmed) to each of:
@@ -213,16 +237,55 @@ Configure for this project:
 - Additional hooks if the workflow calls for them
 
 ### Project-specific skills
-This is where the discovery pays off. For each repeated sequence, frustration, or handoff point you identified in Phase 2, decide whether it warrants a skill. Build the ones that will make a real difference — don't create skills for the sake of it.
 
-Examples of what good discovery might surface:
-- They re-explain context every session → a SessionStart hook that loads it automatically
-- They always run the same test-then-lint-then-commit sequence → a /ship skill
-- They review overnight changes each morning → a /standup skill  
-- They frequently onboard others to the codebase → an /explain skill
-- They have a multi-step deploy process → a /deploy skill
+This is where the discovery pays off. For each candidate flagged in Phase 2's skill candidate map, build the skill. Don't skip them — the map is calibrated to only surface skills with real payoff.
 
-For each skill you create, tell the user in the handoff what it does and when to use it.
+**Skill format.** Each skill lives at `.claude/skills/<name>/SKILL.md`. Write each file with this structure:
+
+```
+---
+description: <one-line description: what it does and when — this appears in /help-me>
+disable-model-invocation: true
+allowed-tools: <only the tools this skill actually needs: Read Write Edit Bash Agent etc.>
+---
+
+You are the `/<name>` skill. <one-sentence purpose.>
+
+## Triggers
+
+- Slash form: `/<name> [optional args]`
+- Natural language: "<phrase 1>", "<phrase 2>", "<phrase 3>"
+
+## What you do
+
+<2–4 sentences describing what this skill does in this specific user's terms. Reference their actual tools, workflows, and pain points — not generic descriptions.>
+
+## Steps
+
+### Step 1: [first concrete action]
+<specific instruction>
+
+### Step 2: [next action]
+<specific instruction>
+
+## Hard rules
+
+- [any firm constraint specific to this skill]
+```
+
+**Make skills feel handcrafted, not generic.** The discovery interview exists so skills can be specific. Use what you learned:
+
+- A `/design-review` skill for a Figma-using designer should reference Figma files, component naming, and the specific kind of feedback they said they need — not "review a design."
+- A `/ship` skill should run the exact sequence the user described in Q7 (their actual test/lint/commit commands), not assume defaults.
+- A `/standup` skill for a Slack user should know their team context and format the update the way they described they share it.
+
+Incorporate their actual words and tools into the skill content. A user who said "I always do X before committing" should find `/ship` already knows what X is.
+
+**Minimum viable skills.** If discovery surfaced candidates, build at least 1–2 before handoff. A user who spent time describing their workflow and left with no custom skills will wonder why they answered all those questions.
+
+**Natural-language triggers matter most.** Slash commands are shortcuts; natural language is how most people invoke skills. Include at least 2–3 trigger phrases. If they said "I wish I could just say 'ship it'", use that exact phrase as a trigger.
+
+For each skill you create, add a bullet in the handoff (Phase 7) explaining what it does and what to say to invoke it.
 
 ### Skills setup (always-active)
 
