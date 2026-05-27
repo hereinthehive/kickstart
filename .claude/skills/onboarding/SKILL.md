@@ -204,37 +204,38 @@ For each candidate that surfaces:
 3. **Name it in their vocabulary**
 4. **Any natural companion?** (see Skill families)
 
-Then consult the common patterns below to catch anything the conversation didn't surface explicitly.
+A nurse who re-explains Epic context every session (→ `UserPromptSubmit` hook), wants shift notes drafted at session end (→ `Stop` hook + agent), and occasionally asks for a full patient summary (→ skill). A musician who always runs a mastering check after exporting (→ `PostToolUse` hook). Build for what *they* described.
 
-A nurse who re-explains Epic context every session (→ `UserPromptSubmit` hook), wants shift notes drafted at session end (→ `Stop` hook + agent), and occasionally asks for a full patient summary (→ skill). A musician who always runs a mastering check after exporting (→ `PostToolUse` hook). Build for what *they* described — the table is a reference, not a boundary.
+Once your candidate list feels complete, do a quick gap-check against the patterns below — not to pick from the list, but to catch anything the conversation didn't surface. If a pattern matches something you've already derived, skip it.
 
 If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome.
 
-### Common patterns (examples, not a checklist)
+### Gap-check patterns
 
-These are known-useful patterns. Match against them during synthesis if they fit. If the user's workflow doesn't map to any row but clearly warrants something, build it anyway.
+Scan this after your synthesis list is complete — only to catch things the conversation didn't surface, not to replace what you derived. If something here duplicates a candidate you already have, skip it. If the user's workflow doesn't match any row but clearly warrants something, build it anyway.
 
-Skills with **+** are families: build both and wire them together (see "Skill families" below).
+Skills with **+** are families (see "Skill families" below).
 
-| Discovery signal | Skills to build | Slash names | Natural-language triggers |
-|---|---|---|---|
-| Q5 includes "planning" OR Q10 includes "planner" | Plan-then-execute family: think it through, then run it | `/plan` **+** `/ship` | "plan this out", "before we build this", "ship this", "execute the plan" |
-| Q5 includes "design work" OR Q8 includes "Figma" | Design family: review a design, then scaffold from it | `/design-review` **+** `/create-component` | "review this design", "write a spec for this", "create a component", "build this from Figma" |
-| Q5 includes "writing tests" OR Q11 includes "testing" | Test generation for a file, function, or feature | `/test` | "write tests for this", "add test coverage", "how should I test this" |
-| Q5 includes "writing docs" OR Q11 includes "writing docs" | Doc generation or improvement for code or a feature | `/docs` | "document this", "write docs for", "add a README" |
-| Q6 includes "explaining context to Claude" | SessionStart hook addition that auto-loads key context each session | (hook, no slash) | (automatic on session start) |
-| Q6 includes "merge conflicts" OR Q11 includes "git" | Git help: untangle conflicts, explain git state, suggest safe next steps | `/git-help` | "help me with this conflict", "what does git say", "I'm confused about git" |
-| Q6 includes "waiting for builds or CI" | CI family: check status, then fix failures | `/ci` **+** `/fix-ci` | "what's CI doing", "check the build", "what failed", "fix that CI error" |
-| Q7 or Q5 mentions a repeated sequence (e.g. tests → lint → commit) | Ship skill that runs the user's exact sequence in one command | `/ship` | "ship this", "commit and push", the phrase they actually used in Q7 |
-| Q1 = "writing, notes, or research" | Writing family: scaffold a document, then refine it | `/draft` **+** `/edit-draft` | "draft this", "outline this", "help me write", "edit my draft", "tighten this up" |
-| Q1 = "data pipeline or analysis" | Analysis helper: loads data context, suggests next steps, explains results | `/analyze` | "analyze this", "what does this data say", "help me understand this dataset" |
-| Q8 includes "Linear" | Issue triage and status summary | `/triage` | "triage my issues", "what should I work on", "prioritize these" |
-| Q8 includes "Slack" | Standup draft from recent git activity | `/standup` | "draft my standup", "what did I do today", "write my update" |
-| Q8 includes "a deploy pipeline" OR Q14 = multiple times a day / weekly | Deploy family: check CI, then deploy | `/ci` **+** `/deploy` | "deploy this", "ready to ship", "push to production", "check before I deploy" |
-| Q11 includes "understanding existing code" | Code explainer: plain-language explanation of a file, function, or pattern | `/explain` | "explain this code", "walk me through this", "what does this do" |
-| Q11 includes "code review" | Review-then-ship family: flag issues, then merge | `/review` **+** `/ship` | "review my PR", "check my changes", "look at this diff", "ship this" |
-
-If multiple signals fire and produce different families, build all families. If two signals both generate the same skill (e.g. Q7 and Q11 both trigger `/ship`), build it once.
+| If the user described… | Consider building | Type |
+|---|---|---|
+| Planning or thinking before coding | `/plan` **+** `/ship` | skill family |
+| Working with Figma or design files | `/design-review` **+** `/create-component` | skill family |
+| Writing or improving tests | `/test` | skill |
+| Writing or improving docs | `/docs` | skill |
+| Re-explaining the same context to Claude each session | Context auto-load | `SessionStart` hook |
+| Always having to remind Claude about something mid-session | Standing context injection | `UserPromptSubmit` hook |
+| Wanting a warning before certain files are touched | Path guard | `PreToolUse` hook |
+| Always running a command after edits (linting, tests, sync) | Reaction | `PostToolUse` hook |
+| A repeated multi-step sequence before committing | `/ship` | skill |
+| Writing, notes, or research as the primary work | `/draft` **+** `/edit-draft` | skill family |
+| Data analysis or pipelines | `/analyze` | skill |
+| Issue tracking in Linear | `/triage` | skill |
+| Writing standups or team updates | `/standup` | skill |
+| Deploying regularly | `/ci` **+** `/deploy` | skill family |
+| Understanding an unfamiliar codebase | `/explain` | skill |
+| Code review before merging | `/review` **+** `/ship` | skill family |
+| Checking the whole codebase for X | `<name>-auditor` | agent |
+| Wanting something to happen on a schedule | `/loop [interval] /[skill]` | loop |
 
 ### Skill families
 
