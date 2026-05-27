@@ -266,7 +266,7 @@ If the user says "I don't know" or "just pick something" or "skip it" repeatedly
 Invoke the curator subagent via the Agent tool:
 
 - subagent_type: `curator`
-- prompt: "I'm about to run onboarding for a project. Run your two-step pipeline: refresh `.claude/knowledge.md` from current docs, then write `.claude/curator-recommendations.md` based on what's already in this project. Project context for Step 2: <summary from Phase 2 interview, including project type, user experience level, working situation, and any constraints>."
+- prompt: "I'm about to run onboarding for a project. Run your full pipeline (Steps 1–3): refresh `.claude/knowledge.md` from current docs, write `.claude/curator-recommendations.md` based on what's already in this project, then research integrations for the tools the user mentioned. Project context: <summary from Phase 2 — project type, user experience level, working situation, constraints>. Tools mentioned in discovery: <comma-separated list of specific tools they named, e.g. 'Figma, Postgres, Linear' — or 'none' if they didn't name any specific tools>."
 
 **The curator writes both files itself.** It writes `.claude/knowledge.md` (project-agnostic best practices baseline) and `.claude/curator-recommendations.md` (project-specific gap analysis). You don't need to write either file in this phase — just invoke the curator and wait for its returned summary.
 
@@ -533,71 +533,78 @@ If hooks were added or changed in Phase 4, mention this briefly:
 
 **5. Add-ons that fit you (conditional)**
 
-Based on the discovery answers, suggest plugins and tool integrations that match what the user actually said. Emit ONLY the entries whose triggers fire. Skip the section entirely if nothing triggers.
+Read `.claude/curator-recommendations.md` and look for the `## Integration opportunities` section. This is what the curator actually found based on the specific tools the user named during discovery — use it as the primary source.
 
-Frame each suggestion in the user's voice — they're integrations or add-ons, not "plugins" or "MCP servers." Don't use those terms with the user unless they used them first.
+For each entry in that section with confidence `confirmed` or `community`:
+- Surface what it enables, in plain language
+- Provide the exact install command the curator found, in a copy-paste block
+- If auth is required, say so in one sentence: *"This one needs you to log in — [command] will walk you through it."*
+- Note if a restart is needed after install
 
-**Auto-install vs. guided install.** Some integrations connect to your accounts (Figma, Slack, Linear, Notion, GitHub) — those need you to log in, so the install path is a guided one: open the integrations menu and authenticate. Others are self-hosted command-line tools (like design-systems-mcp) — those have no auth flow, so onboarding can offer to install them directly with your consent. The instructions below specify which kind each one is.
+After curator findings, check the **fallback list** below for any tools the user mentioned that the curator didn't cover (the fallback covers well-known integrations the curator may not have specifically researched).
 
-For each triggered item, surface the description and copy-paste command. Group everything into one friendly message rather than multiple separate ones. Open with something like:
+Frame everything in the user's voice — "add-ons" or "connections", not "plugins" or "MCP servers." Don't use technical terms unless the user used them first.
 
-> *"A few add-ons might fit how you said you work. Each is optional — you can install them now, later, or not at all."*
+**Auto-install vs. guided.** If the install command requires no account (runs locally), offer to run it now. If it requires auth, give the command and let them run it. Either way, always give the copy-paste command so they can do it later.
 
-Then list only the triggered items below.
+Group everything into one message. Open with:
 
-### Triggers and recommendations
+> *"A few add-ons might fit how you said you work. Each is optional — you can try them now, later, or not at all."*
+
+Skip this section entirely if the curator found nothing and no fallback entries trigger.
+
+### Fallback list (for tools not covered by curator research)
+
+Only use an entry here if: the user mentioned the tool during discovery AND the curator's `## Integration opportunities` section didn't already cover it.
 
 **Superpowers — planning toolkit**
-- Triggers: Q5 includes "planning"; Q10 includes "planner"; Q11 includes "structuring projects"; or free-text mentions planning, specs, architecture, or "thinking it through first."
-- Description: *"Adds a few skills for thinking through what to build before building it — brainstorming an idea, writing out a step-by-step plan, structured implementation."*
-- Install:
+- Trigger: user described planning, thinking things through before building, writing specs, or structuring their approach.
+- Description: *"Adds a few skills for thinking through what to build before building it — brainstorming, step-by-step plans, structured implementation."*
+- Install (no auth needed — offer to run now):
   ```
   /plugin install superpowers
   /reload-plugins
   ```
 
-**Design-systems-mcp (self-hosted, auto-install offered)**
-- Trigger: Q1 (project type) is "design system or plugin"; OR Q11 (areas to improve) includes design-system work; OR free-text answers in Q5/Q7/Q11/Q12 mention design systems, tokens, component libraries, or design-system specific tooling.
-- Description: *"Adds a small server that helps me work with design-system primitives — tokens, components, naming conventions. Open source, runs locally, doesn't need an account."*
-- Install path: auto-install with consent. Ask the user:
-  > *"Want me to install it now? It's a small command-line tool that runs locally — no login needed. Takes about 10 seconds and you'll need to close and reopen Claude Code once afterward."*
-  - On yes: run `claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp`. Capture and surface any errors in plain language. (Onboarding will prompt you to approve the install command when you say yes — that's expected.)
-  - On no: give the user the exact command in a copy-paste block so they can run it later:
-    ```
-    claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp
-    ```
-  - Either way, tell the user they'll need to restart for the new MCP to be active.
+**Design-systems-mcp**
+- Trigger: user mentioned design systems, tokens, component libraries, or design-system-specific tooling.
+- Description: *"Helps me work with design-system primitives — tokens, components, naming conventions. Runs locally, no account needed."*
+- Install (no auth — offer to run now):
+  ```
+  claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp
+  ```
+  Tell the user they'll need to restart after install.
 
-**Figma integration**
-- Trigger: Q8 includes "Figma" OR free-text mentions Figma, design files, or specific Figma features.
+**Figma**
+- Trigger: user mentioned Figma, design files, or working from designs.
 - Description: *"Lets me read and work with your Figma files directly — pull components, check designs, generate code that matches."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Figma. It'll walk you through logging in to your Figma account."*
+- Install (auth required): *"Type `/mcp` in Claude Code and enable Figma — it'll walk you through logging in."*
 
-**Slack integration**
-- Trigger: Q8 includes "Slack" OR free-text mentions Slack, standups, channel notifications.
-- Description: *"Lets me search Slack messages, summarize channels, draft messages, and pull discussion context."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Slack. It'll walk you through logging in to your Slack account."*
+**Slack**
+- Trigger: user mentioned Slack, standups, or channel communication.
+- Description: *"Lets me search messages, summarise channels, draft updates, and pull discussion context from Slack."*
+- Install (auth required): *"Type `/mcp` in Claude Code and enable Slack — it'll walk you through logging in."*
 
-**Linear integration**
-- Trigger: Q8 includes "Linear" OR free-text mentions Linear, issues, tickets.
-- Description: *"Lets me read and update Linear issues, projects, and cycles — handy when you're tracking work in Linear."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Linear. It'll walk you through logging in to your Linear account."*
+**Linear**
+- Trigger: user mentioned Linear, issues, or ticket tracking.
+- Description: *"Lets me read and update Linear issues, projects, and cycles."*
+- Install (auth required): *"Type `/mcp` in Claude Code and enable Linear — it'll walk you through logging in."*
 
-**Notion integration**
-- Trigger: Q8 includes "Notion" OR free-text mentions Notion docs or pages.
-- Description: *"Lets me read and write Notion pages so I can pull docs into a conversation or update them for you."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Notion. It'll walk you through logging in to your Notion account."*
+**Notion**
+- Trigger: user mentioned Notion docs or pages.
+- Description: *"Lets me read and write Notion pages — pull docs into conversation or update them for you."*
+- Install (auth required): *"Type `/mcp` in Claude Code and enable Notion — it'll walk you through logging in."*
 
-**GitHub integration**
-- Trigger: Q8 includes "GitHub" AND the user said the project is on GitHub (most projects are; only skip if they explicitly said another host).
-- Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly — instead of just through git."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable GitHub. It'll walk you through logging in to your GitHub account."*
+**GitHub**
+- Trigger: user mentioned GitHub and the project is hosted there.
+- Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly."*
+- Install (auth required): *"Type `/mcp` in Claude Code and enable GitHub — it'll walk you through logging in."*
 
-### What NOT to recommend by default
+### What NOT to recommend
 
-- **agent-skills (Addy Osmani):** overlaps with Kickstart's own /remember, /wrap, /update. Recommend only if the user explicitly asks for production-engineering rigor.
-- **Database, deploy pipeline, "something else":** too generic to map to a specific integration. Don't recommend unless the user named a specific tool you recognize.
-- **Anything not directly triggered by discovery.** Don't manufacture recommendations.
+- Anything not mentioned during discovery or not found by the curator.
+- agent-skills (Addy Osmani) — overlaps with Kickstart's own skills; only if the user explicitly asks.
+- Generic tools (databases, pipelines) unless the user named the specific product.
 
 **6. Light touch on prompts**
 
