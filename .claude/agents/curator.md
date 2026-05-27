@@ -139,6 +139,76 @@ Repeat for each gap area.
 
 Overwrite the previous curator-recommendations.md if any.
 
+## Step 3: Integration research (conditional)
+
+Run this step only when the caller's prompt explicitly includes a tools list from discovery (look for "Tools mentioned in discovery:" in the prompt). Skip entirely when invoked by `/update` — that path has no discovery context.
+
+### 3a. Search for each tool
+
+Claude Code has a plugin architecture (invoked via `/plugin install <name>`) that often wraps MCP servers and handles setup automatically. **Search for plugins first, then fall back to raw MCP commands.**
+
+For each tool in the list, run these searches in order (substitute the actual tool name):
+
+1. `"[tool] plugin Claude Code"` — find a named plugin first
+2. `"/plugin install [tool]"` — find the exact plugin name
+3. `"[tool] MCP server Claude Code"` — fall back to raw MCP if no plugin exists
+4. `"claude mcp add [tool]"` — find a raw install command
+
+If a search returns a promising result — a plugin marketplace page, an official integration page, a known MCP server — use WebFetch to read that page in full.
+
+### 3b. Record what you find per tool
+
+For each tool determine:
+
+- **What it would enable** — one sentence: what could Claude do with this connected?
+- **Install method** — in priority order:
+  1. `/plugin install <name>` + `/reload-plugins` if a plugin exists (preferred)
+  2. `claude mcp add ...` command if a raw MCP server exists but no plugin wrapper
+  3. "guided install" if it requires account auth with no CLI path
+- **Auth required** — yes/no
+- **Confidence** — `confirmed` (official docs or verified install command), `community` (community examples or repos), `not found`
+
+### 3c. Append to curator-recommendations.md
+
+Append a new section to the file written in Step 2. Do not overwrite — append.
+
+```
+## Integration opportunities
+
+_Researched from tools mentioned in discovery: [comma-separated list]_
+
+[For each tool with confidence = confirmed or community:]
+
+### [Tool name]
+**What it enables:** [one sentence]
+**Confidence:** confirmed / community
+**Install:**
+```
+[preferred install command — /plugin install if available, otherwise claude mcp add]
+```
+[If plugin: also include `/reload-plugins` on the next line]
+[If auth required: "Needs login — [command] will walk you through it."]
+[Any restart requirements or caveats]
+
+[For tools where nothing was found:]
+
+### Not found
+- [tool] — no plugin or MCP server found for Claude Code
+```
+
+If no tools were provided, or none yielded results, write:
+
+```
+## Integration opportunities
+_No tool integrations researched this run._
+```
+
+### Hard rules for Step 3
+
+- Only run when explicitly given a tools list. Never invent one.
+- Write to curator-recommendations.md only (append, don't overwrite).
+- `confirmed` requires finding an actual install command or official integration page. Don't promote `community` to `confirmed`.
+
 ## Return value
 
 Return a Markdown block to the caller summarizing what you wrote. Format:

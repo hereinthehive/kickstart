@@ -127,82 +127,115 @@ If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by
 
 Record the safety-net decision in onboarding-log.md (Phase 6). On "yes," activate the safety-net skills in Phase 4. On "not now," re-ask on next refresh. On "no," skip on future refreshes.
 
-### Listening for skill candidates
+### Listening for candidates
 
-As you go, notice and mentally flag:
+As you go, notice and mentally flag anything the user says that suggests friction, repetition, or an unmet need. Don't categorise yet — just collect. The synthesis step maps each one to the right type.
 
-- Repeated sequences ("I always run tests then lint then commit") → possible skill
-- Things they re-explain every session → possible project memory or context-loading skill
-- Handoff points (CI, teammates, external tools) → possible workflow skill or agent
-- Frustrations and wishes they describe → direct candidates
-- Multi-step processes with no obvious human decision point in the middle → possible agent rather than skill
+Signals to listen for:
+
+- "I always do X then Y then Z" → probably a skill or loop
+- "I always have to re-explain X to Claude" → probably a `UserPromptSubmit` hook
+- "I want a warning before anything touches [path]" → probably a `PreToolUse` hook
+- "After you edit code, I always run the linter" → probably a `PostToolUse` hook
+- "I want to see [X] at the start of every session" → probably a `SessionStart` hook addition
+- "I forget to [X] at the end of sessions" → probably a `Stop` hook addition
+- "Every week / every morning I want to [X]" → probably a loop
+- "I wish it would just check [all the files / the whole codebase] for [X]" → probably an agent
+- "Whenever I ship, I also want it to [do Y automatically]" → probably an agent called by `/ship`
+- "I want to be able to say [phrase] and have it happen" → skill
 
 Don't filter during the conversation — just notice. The synthesis step is where you reason through what to build.
 
-**Hard rule: don't manufacture.** Only build something if the user's actual description motivated it. If they described nothing that genuinely warrants a skill, ship with the always-active skills. A clean small setup beats a noisy one nobody invokes.
+**Hard rule: don't manufacture.** Only build something if the user's actual description motivated it. A clean small setup beats a noisy one nobody uses.
 
-### Skills vs agents
+### What to build: decision framework
 
-Before synthesising candidates, know which format to reach for:
+Use this to map each candidate from the conversation to the right type. The two questions that matter:
 
-**Build a skill when** the user initiates it and stays in the loop at each step:
-- "run my test-lint-commit sequence" → `/ship`
-- "review this design and tell me what to build" → `/design-review`
-- "help me draft this doc" → `/draft`
+**1. What triggers this?**
 
-Skills live at `.claude/skills/<name>/SKILL.md`. They appear in `/help-me` and are invoked by typing or saying their name.
+```
+User consciously asks for it
+  └── Does it survey broadly / run without user guidance?
+        No  → skill
+        Yes → agent (often called by a skill)
 
-**Build a subagent when** the task runs autonomously, involves many steps, or is called *by* other skills rather than directly by the user:
-- Surveys all component files and produces a consistency report → agent
-- Drafts release notes from git history when `/ship` fires → agent called by `/ship`, not directly by user
-- Reads external data sources and synthesises a summary → agent
+Something else triggers it automatically
+  ├── Session starts              → SessionStart hook (+ optional agent)
+  ├── Session ends                → Stop hook (+ optional agent)
+  ├── Every message the user sends → UserPromptSubmit hook
+  ├── Before Claude touches a file → PreToolUse hook
+  └── After Claude edits something → PostToolUse hook (+ optional agent)
 
-Subagents live at `.claude/agents/<name>.md`. They don't appear in `/help-me` but skills and Claude itself can invoke them by name.
+On a regular schedule
+  └── loop  (e.g. /loop daily /triage, /loop weekly /update)
+```
+
+**2. Does the user stay in the loop?**
+
+If yes at each step → skill. If no, just handle it → agent.
+
+### What each type looks like
+
+**Skill** — user says something, Claude walks through it step by step. Appears in `/help-me`. Lives at `.claude/skills/<name>/SKILL.md`.
+> *"I always run tests, lint, then commit before pushing"* → `/ship`
+
+**Agent** — runs autonomously, ranges across files or data, returns a result. Called by skills, hooks, or by name. Lives at `.claude/agents/<name>.md`.
+> *"Check all my component files for naming inconsistencies"* → `component-auditor` agent invoked by `/design-review`
+
+**Hook** — fires automatically at a lifecycle point, no user trigger needed. Added to `.claude/settings.json`.
+> *"I always have to remind you that we use the `feature/` branch convention"* → `UserPromptSubmit` hook that injects that context into every message  
+> *"Before you touch anything in `/payments`, warn me"* → `PreToolUse` hook  
+> *"After you edit a file, run `npm run lint`"* → `PostToolUse` hook
+
+**Loop** — a skill on a recurring schedule. Suggested as a one-time `/loop` command in the handoff, not built as a file.
+> *"Every Monday I want to triage my Linear issues"* → suggest `/loop weekly /triage` in the handoff
 
 ### Synthesise candidates
 
-After finishing the questionnaire — but before moving to Phase 3 — take a deliberate beat. Read back through everything the user told you and ask:
+After the conversation — before Phase 3 — take a deliberate beat. Re-read what the user told you and ask:
 
-> *"If this person opened Claude Code tomorrow already equipped for their work, what tools would they have that they don't have today?"*
+> *"If this person opened Claude Code tomorrow already equipped for their work, what would be different?"*
 
-For each candidate that surfaces from this question:
+For each candidate that surfaces:
 
-1. **Name the specific workflow** — be precise ("they pull a Figma spec and check it against existing components before writing code", not "they design things")
-2. **Skill or agent?** Use the distinction above.
-3. **Name it in their vocabulary** — use the words they actually used, not generic labels
-4. **Any natural companion?** Does it pair with a create/review counterpart, a plan/execute counterpart, etc. (see Skill families)
+1. **Name the specific workflow** — precisely ("they re-explain the branching convention at the start of every session", not "they have git preferences")
+2. **Apply the decision framework** — which type fits? Skill, agent, hook, or loop?
+3. **Name it in their vocabulary**
+4. **Any natural companion?** (see Skill families)
 
-Then consult the common patterns below to see if any of your candidates match a known pattern — if so, use that pattern's name and structure. Also use the table to catch anything the interview might not have surfaced explicitly.
+A nurse who re-explains Epic context every session (→ `UserPromptSubmit` hook), wants shift notes drafted at session end (→ `Stop` hook + agent), and occasionally asks for a full patient summary (→ skill). A musician who always runs a mastering check after exporting (→ `PostToolUse` hook). Build for what *they* described.
 
-A nurse who uses Epic and sends shift notes via Teams. A musician recording in Logic who publishes stems to a shared drive. A data journalist scraping, cleaning, and publishing in a tight loop. The synthesis step is where you build for *their* actual workflow — the table is a reference, not a boundary.
+Once your candidate list feels complete, do a quick gap-check against the patterns below — not to pick from the list, but to catch anything the conversation didn't surface. If a pattern matches something you've already derived, skip it.
 
-If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome, not a failure.
+If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome.
 
-### Common patterns (examples, not a checklist)
+### Gap-check patterns
 
-These are known-useful patterns. Match against them during synthesis if they fit. If the user's workflow doesn't map to any row but clearly warrants something, build it anyway.
+Scan this after your synthesis list is complete — only to catch things the conversation didn't surface, not to replace what you derived. If something here duplicates a candidate you already have, skip it. If the user's workflow doesn't match any row but clearly warrants something, build it anyway.
 
-Skills with **+** are families: build both and wire them together (see "Skill families" below).
+Skills with **+** are families (see "Skill families" below).
 
-| Discovery signal | Skills to build | Slash names | Natural-language triggers |
-|---|---|---|---|
-| Q5 includes "planning" OR Q10 includes "planner" | Plan-then-execute family: think it through, then run it | `/plan` **+** `/ship` | "plan this out", "before we build this", "ship this", "execute the plan" |
-| Q5 includes "design work" OR Q8 includes "Figma" | Design family: review a design, then scaffold from it | `/design-review` **+** `/create-component` | "review this design", "write a spec for this", "create a component", "build this from Figma" |
-| Q5 includes "writing tests" OR Q11 includes "testing" | Test generation for a file, function, or feature | `/test` | "write tests for this", "add test coverage", "how should I test this" |
-| Q5 includes "writing docs" OR Q11 includes "writing docs" | Doc generation or improvement for code or a feature | `/docs` | "document this", "write docs for", "add a README" |
-| Q6 includes "explaining context to Claude" | SessionStart hook addition that auto-loads key context each session | (hook, no slash) | (automatic on session start) |
-| Q6 includes "merge conflicts" OR Q11 includes "git" | Git help: untangle conflicts, explain git state, suggest safe next steps | `/git-help` | "help me with this conflict", "what does git say", "I'm confused about git" |
-| Q6 includes "waiting for builds or CI" | CI family: check status, then fix failures | `/ci` **+** `/fix-ci` | "what's CI doing", "check the build", "what failed", "fix that CI error" |
-| Q7 or Q5 mentions a repeated sequence (e.g. tests → lint → commit) | Ship skill that runs the user's exact sequence in one command | `/ship` | "ship this", "commit and push", the phrase they actually used in Q7 |
-| Q1 = "writing, notes, or research" | Writing family: scaffold a document, then refine it | `/draft` **+** `/edit-draft` | "draft this", "outline this", "help me write", "edit my draft", "tighten this up" |
-| Q1 = "data pipeline or analysis" | Analysis helper: loads data context, suggests next steps, explains results | `/analyze` | "analyze this", "what does this data say", "help me understand this dataset" |
-| Q8 includes "Linear" | Issue triage and status summary | `/triage` | "triage my issues", "what should I work on", "prioritize these" |
-| Q8 includes "Slack" | Standup draft from recent git activity | `/standup` | "draft my standup", "what did I do today", "write my update" |
-| Q8 includes "a deploy pipeline" OR Q14 = multiple times a day / weekly | Deploy family: check CI, then deploy | `/ci` **+** `/deploy` | "deploy this", "ready to ship", "push to production", "check before I deploy" |
-| Q11 includes "understanding existing code" | Code explainer: plain-language explanation of a file, function, or pattern | `/explain` | "explain this code", "walk me through this", "what does this do" |
-| Q11 includes "code review" | Review-then-ship family: flag issues, then merge | `/review` **+** `/ship` | "review my PR", "check my changes", "look at this diff", "ship this" |
-
-If multiple signals fire and produce different families, build all families. If two signals both generate the same skill (e.g. Q7 and Q11 both trigger `/ship`), build it once.
+| If the user described… | Consider building | Type |
+|---|---|---|
+| Planning or thinking before coding | `/plan` **+** `/ship` | skill family |
+| Working with Figma or design files | `/design-review` **+** `/create-component` | skill family |
+| Writing or improving tests | `/test` | skill |
+| Writing or improving docs | `/docs` | skill |
+| Re-explaining the same context to Claude each session | Context auto-load | `SessionStart` hook |
+| Always having to remind Claude about something mid-session | Standing context injection | `UserPromptSubmit` hook |
+| Wanting a warning before certain files are touched | Path guard | `PreToolUse` hook |
+| Always running a command after edits (linting, tests, sync) | Reaction | `PostToolUse` hook |
+| A repeated multi-step sequence before committing | `/ship` | skill |
+| Writing, notes, or research as the primary work | `/draft` **+** `/edit-draft` | skill family |
+| Data analysis or pipelines | `/analyze` | skill |
+| Issue tracking in Linear | `/triage` | skill |
+| Writing standups or team updates | `/standup` | skill |
+| Deploying regularly | `/ci` **+** `/deploy` | skill family |
+| Understanding an unfamiliar codebase | `/explain` | skill |
+| Code review before merging | `/review` **+** `/ship` | skill family |
+| Checking the whole codebase for X | `<name>-auditor` | agent |
+| Wanting something to happen on a schedule | `/loop [interval] /[skill]` | loop |
 
 ### Skill families
 
@@ -266,7 +299,7 @@ If the user says "I don't know" or "just pick something" or "skip it" repeatedly
 Invoke the curator subagent via the Agent tool:
 
 - subagent_type: `curator`
-- prompt: "I'm about to run onboarding for a project. Run your two-step pipeline: refresh `.claude/knowledge.md` from current docs, then write `.claude/curator-recommendations.md` based on what's already in this project. Project context for Step 2: <summary from Phase 2 interview, including project type, user experience level, working situation, and any constraints>."
+- prompt: "I'm about to run onboarding for a project. Run your full pipeline (Steps 1–3): refresh `.claude/knowledge.md` from current docs, write `.claude/curator-recommendations.md` based on what's already in this project, then research integrations for the tools the user mentioned. Project context: <summary from Phase 2 — project type, user experience level, working situation, constraints>. Tools mentioned in discovery: <comma-separated list of specific tools they named, e.g. 'Figma, Postgres, Linear' — or 'none' if they didn't name any specific tools>."
 
 **The curator writes both files itself.** It writes `.claude/knowledge.md` (project-agnostic best practices baseline) and `.claude/curator-recommendations.md` (project-specific gap analysis). You don't need to write either file in this phase — just invoke the curator and wait for its returned summary.
 
@@ -300,8 +333,55 @@ Use a project-specific heading so multiple projects can coexist in this file wit
 ### .claude/settings.json
 Configure for this project:
 - Permissions: allow commands this project genuinely needs
-- SessionStart hook: already configured for git context and environment detection — preserve it, extend if needed
-- Additional hooks if the workflow calls for them
+- Extend existing hooks or add new ones based on synthesis candidates (see below)
+
+### Hooks
+
+For each hook candidate from the synthesis, add it to the `hooks` block in `.claude/settings.json`. The existing SessionStart and Stop hooks are already present — extend them rather than replacing them.
+
+**UserPromptSubmit** — inject standing context into every message. Use when the user said they always have to remind Claude about something.
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "echo '<standing context to inject>'" }]
+      }
+    ]
+  }
+}
+```
+
+**PreToolUse** — warn or block before Claude touches specific files or runs specific commands. Use when the user mentioned sensitive paths or "warn me before you touch X".
+```json
+"PreToolUse": [
+  {
+    "matcher": "Edit|Write",
+    "hooks": [{ "type": "command", "command": "echo 'Touching <path> — confirm this is intentional'" }]
+  }
+]
+```
+
+**PostToolUse** — run a command automatically after Claude edits a file. Use when the user described a reaction they always want (linting, tests, syncing).
+```json
+"PostToolUse": [
+  {
+    "matcher": "Edit|Write",
+    "hooks": [{ "type": "command", "command": "<their actual command, e.g. npm run lint>" }]
+  }
+]
+```
+
+Use the user's actual commands and paths — don't use placeholders in the final output.
+
+### Loops
+
+For each loop candidate from the synthesis, don't write a file — add a suggested command to the handoff (Phase 7). Format:
+
+> *"You mentioned you want to [X] every [interval]. You can set that up with one command: `/loop [daily|weekly|monthly] /[skill-name]`."*
+
+Only suggest loops for skills that were actually built. Don't suggest a loop for a skill that doesn't exist yet.
 
 ### Project-specific skills and agents
 
@@ -533,71 +613,100 @@ If hooks were added or changed in Phase 4, mention this briefly:
 
 **5. Add-ons that fit you (conditional)**
 
-Based on the discovery answers, suggest plugins and tool integrations that match what the user actually said. Emit ONLY the entries whose triggers fire. Skip the section entirely if nothing triggers.
+Read `.claude/curator-recommendations.md` and look for the `## Integration opportunities` section. This is what the curator actually found based on the specific tools the user named during discovery — use it as the primary source.
 
-Frame each suggestion in the user's voice — they're integrations or add-ons, not "plugins" or "MCP servers." Don't use those terms with the user unless they used them first.
+For each entry in that section with confidence `confirmed` or `community`:
+- Surface what it enables, in plain language
+- Provide the exact install command the curator found, in a copy-paste block
+- If auth is required, say so in one sentence: *"This one needs you to log in — [command] will walk you through it."*
+- Note if a restart is needed after install
 
-**Auto-install vs. guided install.** Some integrations connect to your accounts (Figma, Slack, Linear, Notion, GitHub) — those need you to log in, so the install path is a guided one: open the integrations menu and authenticate. Others are self-hosted command-line tools (like design-systems-mcp) — those have no auth flow, so onboarding can offer to install them directly with your consent. The instructions below specify which kind each one is.
+After curator findings, check the **fallback list** below for any tools the user mentioned that the curator didn't cover (the fallback covers well-known integrations the curator may not have specifically researched).
 
-For each triggered item, surface the description and copy-paste command. Group everything into one friendly message rather than multiple separate ones. Open with something like:
+Frame everything in the user's voice — "add-ons" or "connections", not "plugins" or "MCP servers." Don't use technical terms unless the user used them first.
 
-> *"A few add-ons might fit how you said you work. Each is optional — you can install them now, later, or not at all."*
+**Plugins first.** Claude Code has a plugin architecture (`/plugin install <name>`) that wraps most integrations and handles MCP setup automatically. If the curator found a plugin, use that — it's simpler than a raw `claude mcp add` command. Only fall back to raw MCP commands when no plugin exists.
 
-Then list only the triggered items below.
+**Auto-install vs. guided.** If the install requires no account, offer to run it now. If it requires auth, give the command and let them run it. Always provide the copy-paste command so they can do it later.
 
-### Triggers and recommendations
+Group everything into one message. Open with:
+
+> *"A few add-ons might fit how you said you work. Each is optional — you can try them now, later, or not at all."*
+
+Skip this section entirely if the curator found nothing and no fallback entries trigger.
+
+### Fallback list (for tools not covered by curator research)
+
+Only use an entry here if: the user mentioned the tool during discovery AND the curator's `## Integration opportunities` section didn't already cover it.
 
 **Superpowers — planning toolkit**
-- Triggers: Q5 includes "planning"; Q10 includes "planner"; Q11 includes "structuring projects"; or free-text mentions planning, specs, architecture, or "thinking it through first."
-- Description: *"Adds a few skills for thinking through what to build before building it — brainstorming an idea, writing out a step-by-step plan, structured implementation."*
-- Install:
+- Trigger: user described planning, thinking things through before building, writing specs, or structuring their approach.
+- Description: *"Adds a few skills for thinking through what to build before building it — brainstorming, step-by-step plans, structured implementation."*
+- Install (no auth needed — offer to run now):
   ```
   /plugin install superpowers
   /reload-plugins
   ```
 
-**Design-systems-mcp (self-hosted, auto-install offered)**
-- Trigger: Q1 (project type) is "design system or plugin"; OR Q11 (areas to improve) includes design-system work; OR free-text answers in Q5/Q7/Q11/Q12 mention design systems, tokens, component libraries, or design-system specific tooling.
-- Description: *"Adds a small server that helps me work with design-system primitives — tokens, components, naming conventions. Open source, runs locally, doesn't need an account."*
-- Install path: auto-install with consent. Ask the user:
-  > *"Want me to install it now? It's a small command-line tool that runs locally — no login needed. Takes about 10 seconds and you'll need to close and reopen Claude Code once afterward."*
-  - On yes: run `claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp`. Capture and surface any errors in plain language. (Onboarding will prompt you to approve the install command when you say yes — that's expected.)
-  - On no: give the user the exact command in a copy-paste block so they can run it later:
-    ```
-    claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp
-    ```
-  - Either way, tell the user they'll need to restart for the new MCP to be active.
+**Design-systems-mcp**
+- Trigger: user mentioned design systems, tokens, component libraries, or design-system-specific tooling.
+- Description: *"Helps me work with design-system primitives — tokens, components, naming conventions. Runs locally, no account needed."*
+- Install (no auth — offer to run now):
+  ```
+  claude mcp add --transport http design-systems https://design-systems-mcp.southleft.com/mcp
+  ```
+  Tell the user they'll need to restart after install.
 
-**Figma integration**
-- Trigger: Q8 includes "Figma" OR free-text mentions Figma, design files, or specific Figma features.
+**Figma**
+- Trigger: user mentioned Figma, design files, or working from designs.
 - Description: *"Lets me read and work with your Figma files directly — pull components, check designs, generate code that matches."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Figma. It'll walk you through logging in to your Figma account."*
+- Install:
+  ```
+  /plugin install figma
+  /reload-plugins
+  ```
 
-**Slack integration**
-- Trigger: Q8 includes "Slack" OR free-text mentions Slack, standups, channel notifications.
-- Description: *"Lets me search Slack messages, summarize channels, draft messages, and pull discussion context."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Slack. It'll walk you through logging in to your Slack account."*
+**Slack**
+- Trigger: user mentioned Slack, standups, or channel communication.
+- Description: *"Lets me search messages, summarise channels, draft updates, and pull discussion context from Slack."*
+- Install:
+  ```
+  /plugin install slack
+  /reload-plugins
+  ```
 
-**Linear integration**
-- Trigger: Q8 includes "Linear" OR free-text mentions Linear, issues, tickets.
-- Description: *"Lets me read and update Linear issues, projects, and cycles — handy when you're tracking work in Linear."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Linear. It'll walk you through logging in to your Linear account."*
+**Linear**
+- Trigger: user mentioned Linear, issues, or ticket tracking.
+- Description: *"Lets me read and update Linear issues, projects, and cycles."*
+- Install:
+  ```
+  /plugin install linear
+  /reload-plugins
+  ```
 
-**Notion integration**
-- Trigger: Q8 includes "Notion" OR free-text mentions Notion docs or pages.
-- Description: *"Lets me read and write Notion pages so I can pull docs into a conversation or update them for you."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable Notion. It'll walk you through logging in to your Notion account."*
+**Notion**
+- Trigger: user mentioned Notion docs or pages.
+- Description: *"Lets me read and write Notion pages — pull docs into conversation or update them for you."*
+- Install:
+  ```
+  /plugin install notion
+  /reload-plugins
+  ```
 
-**GitHub integration**
-- Trigger: Q8 includes "GitHub" AND the user said the project is on GitHub (most projects are; only skip if they explicitly said another host).
-- Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly — instead of just through git."*
-- Install path: guided install (auth required). Tell the user: *"Open the integrations menu in Claude Code (type `/mcp`) and enable GitHub. It'll walk you through logging in to your GitHub account."*
+**GitHub**
+- Trigger: user mentioned GitHub and the project is hosted there.
+- Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly."*
+- Install:
+  ```
+  /plugin install github
+  /reload-plugins
+  ```
 
-### What NOT to recommend by default
+### What NOT to recommend
 
-- **agent-skills (Addy Osmani):** overlaps with Kickstart's own /remember, /wrap, /update. Recommend only if the user explicitly asks for production-engineering rigor.
-- **Database, deploy pipeline, "something else":** too generic to map to a specific integration. Don't recommend unless the user named a specific tool you recognize.
-- **Anything not directly triggered by discovery.** Don't manufacture recommendations.
+- Anything not mentioned during discovery or not found by the curator.
+- agent-skills (Addy Osmani) — overlaps with Kickstart's own skills; only if the user explicitly asks.
+- Generic tools (databases, pipelines) unless the user named the specific product.
 
 **6. Light touch on prompts**
 
