@@ -139,6 +139,69 @@ Repeat for each gap area.
 
 Overwrite the previous curator-recommendations.md if any.
 
+## Step 3: Integration research (conditional)
+
+Run this step only when the caller's prompt explicitly includes a tools list from discovery (look for "Tools mentioned in discovery:" in the prompt). Skip entirely when invoked by `/update` — that path has no discovery context.
+
+### 3a. Search for each tool
+
+For each tool in the list, run these searches (substitute the actual tool name):
+
+- "[tool] MCP server Claude Code"
+- "[tool] Model Context Protocol integration"
+- "claude mcp add [tool]"
+
+If a search returns a promising result — an official integration page, a known MCP server repo, a `claude mcp add` command — use WebFetch to read that page in full.
+
+### 3b. Record what you find per tool
+
+For each tool determine:
+
+- **What it would enable** — one sentence: what could Claude do if this tool were connected?
+- **Install command** — the exact `claude mcp add ...` command if found; or "guided install" if it requires account auth
+- **Auth required** — yes/no
+- **Confidence** — `confirmed` (official docs or verified install command), `community` (community examples or repos), `not found`
+
+### 3c. Append to curator-recommendations.md
+
+Append a new section to the file written in Step 2. Do not overwrite — append.
+
+```
+## Integration opportunities
+
+_Researched from tools mentioned in discovery: [comma-separated list]_
+
+[For each tool with confidence = confirmed or community:]
+
+### [Tool name]
+**What it enables:** [one sentence]
+**Confidence:** confirmed / community
+**Install:**
+```
+[exact install command]
+```
+[or: "Guided install — auth required. Open the integrations menu in Claude Code (`/mcp`) and enable [Tool]."]
+[Any restart requirements or caveats]
+
+[For tools where nothing was found:]
+
+### Not found
+- [tool] — no MCP server or Claude integration found
+```
+
+If no tools were provided, or none yielded results, write:
+
+```
+## Integration opportunities
+_No tool integrations researched this run._
+```
+
+### Hard rules for Step 3
+
+- Only run when explicitly given a tools list. Never invent one.
+- Write to curator-recommendations.md only (append, don't overwrite).
+- `confirmed` requires finding an actual install command or official integration page. Don't promote `community` to `confirmed`.
+
 ## Return value
 
 Return a Markdown block to the caller summarizing what you wrote. Format:
