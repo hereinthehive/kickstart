@@ -545,7 +545,9 @@ After curator findings, check the **fallback list** below for any tools the user
 
 Frame everything in the user's voice — "add-ons" or "connections", not "plugins" or "MCP servers." Don't use technical terms unless the user used them first.
 
-**Auto-install vs. guided.** If the install command requires no account (runs locally), offer to run it now. If it requires auth, give the command and let them run it. Either way, always give the copy-paste command so they can do it later.
+**Plugins first.** Claude Code has a plugin architecture (`/plugin install <name>`) that wraps most integrations and handles MCP setup automatically. If the curator found a plugin, use that — it's simpler than a raw `claude mcp add` command. Only fall back to raw MCP commands when no plugin exists.
+
+**Auto-install vs. guided.** If the install requires no account, offer to run it now. If it requires auth, give the command and let them run it. Always provide the copy-paste command so they can do it later.
 
 Group everything into one message. Open with:
 
@@ -578,27 +580,47 @@ Only use an entry here if: the user mentioned the tool during discovery AND the 
 **Figma**
 - Trigger: user mentioned Figma, design files, or working from designs.
 - Description: *"Lets me read and work with your Figma files directly — pull components, check designs, generate code that matches."*
-- Install (auth required): *"Type `/mcp` in Claude Code and enable Figma — it'll walk you through logging in."*
+- Install:
+  ```
+  /plugin install figma
+  /reload-plugins
+  ```
 
 **Slack**
 - Trigger: user mentioned Slack, standups, or channel communication.
 - Description: *"Lets me search messages, summarise channels, draft updates, and pull discussion context from Slack."*
-- Install (auth required): *"Type `/mcp` in Claude Code and enable Slack — it'll walk you through logging in."*
+- Install:
+  ```
+  /plugin install slack
+  /reload-plugins
+  ```
 
 **Linear**
 - Trigger: user mentioned Linear, issues, or ticket tracking.
 - Description: *"Lets me read and update Linear issues, projects, and cycles."*
-- Install (auth required): *"Type `/mcp` in Claude Code and enable Linear — it'll walk you through logging in."*
+- Install:
+  ```
+  /plugin install linear
+  /reload-plugins
+  ```
 
 **Notion**
 - Trigger: user mentioned Notion docs or pages.
 - Description: *"Lets me read and write Notion pages — pull docs into conversation or update them for you."*
-- Install (auth required): *"Type `/mcp` in Claude Code and enable Notion — it'll walk you through logging in."*
+- Install:
+  ```
+  /plugin install notion
+  /reload-plugins
+  ```
 
 **GitHub**
 - Trigger: user mentioned GitHub and the project is hosted there.
 - Description: *"Lets me work with pull requests, issues, and reviews on GitHub directly."*
-- Install (auth required): *"Type `/mcp` in Claude Code and enable GitHub — it'll walk you through logging in."*
+- Install:
+  ```
+  /plugin install github
+  /reload-plugins
+  ```
 
 ### What NOT to recommend
 

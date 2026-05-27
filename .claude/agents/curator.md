@@ -145,20 +145,26 @@ Run this step only when the caller's prompt explicitly includes a tools list fro
 
 ### 3a. Search for each tool
 
-For each tool in the list, run these searches (substitute the actual tool name):
+Claude Code has a plugin architecture (invoked via `/plugin install <name>`) that often wraps MCP servers and handles setup automatically. **Search for plugins first, then fall back to raw MCP commands.**
 
-- "[tool] MCP server Claude Code"
-- "[tool] Model Context Protocol integration"
-- "claude mcp add [tool]"
+For each tool in the list, run these searches in order (substitute the actual tool name):
 
-If a search returns a promising result — an official integration page, a known MCP server repo, a `claude mcp add` command — use WebFetch to read that page in full.
+1. `"[tool] plugin Claude Code"` — find a named plugin first
+2. `"/plugin install [tool]"` — find the exact plugin name
+3. `"[tool] MCP server Claude Code"` — fall back to raw MCP if no plugin exists
+4. `"claude mcp add [tool]"` — find a raw install command
+
+If a search returns a promising result — a plugin marketplace page, an official integration page, a known MCP server — use WebFetch to read that page in full.
 
 ### 3b. Record what you find per tool
 
 For each tool determine:
 
-- **What it would enable** — one sentence: what could Claude do if this tool were connected?
-- **Install command** — the exact `claude mcp add ...` command if found; or "guided install" if it requires account auth
+- **What it would enable** — one sentence: what could Claude do with this connected?
+- **Install method** — in priority order:
+  1. `/plugin install <name>` + `/reload-plugins` if a plugin exists (preferred)
+  2. `claude mcp add ...` command if a raw MCP server exists but no plugin wrapper
+  3. "guided install" if it requires account auth with no CLI path
 - **Auth required** — yes/no
 - **Confidence** — `confirmed` (official docs or verified install command), `community` (community examples or repos), `not found`
 
@@ -178,15 +184,16 @@ _Researched from tools mentioned in discovery: [comma-separated list]_
 **Confidence:** confirmed / community
 **Install:**
 ```
-[exact install command]
+[preferred install command — /plugin install if available, otherwise claude mcp add]
 ```
-[or: "Guided install — auth required. Open the integrations menu in Claude Code (`/mcp`) and enable [Tool]."]
+[If plugin: also include `/reload-plugins` on the next line]
+[If auth required: "Needs login — [command] will walk you through it."]
 [Any restart requirements or caveats]
 
 [For tools where nothing was found:]
 
 ### Not found
-- [tool] — no MCP server or Claude integration found
+- [tool] — no plugin or MCP server found for Claude Code
 ```
 
 If no tools were provided, or none yielded results, write:
