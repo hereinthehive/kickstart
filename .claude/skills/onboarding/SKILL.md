@@ -127,56 +127,88 @@ If git state is (2), mention in Phase 7 handoff: *"This project isn't tracked by
 
 Record the safety-net decision in onboarding-log.md (Phase 6). On "yes," activate the safety-net skills in Phase 4. On "not now," re-ask on next refresh. On "no," skip on future refreshes.
 
-### Listening for skill candidates
+### Listening for candidates
 
-As you go, notice and mentally flag:
+As you go, notice and mentally flag anything the user says that suggests friction, repetition, or an unmet need. Don't categorise yet — just collect. The synthesis step maps each one to the right type.
 
-- Repeated sequences ("I always run tests then lint then commit") → possible skill
-- Things they re-explain every session → possible project memory or context-loading skill
-- Handoff points (CI, teammates, external tools) → possible workflow skill or agent
-- Frustrations and wishes they describe → direct candidates
-- Multi-step processes with no obvious human decision point in the middle → possible agent rather than skill
+Signals to listen for:
+
+- "I always do X then Y then Z" → probably a skill or loop
+- "I always have to re-explain X to Claude" → probably a `UserPromptSubmit` hook
+- "I want a warning before anything touches [path]" → probably a `PreToolUse` hook
+- "After you edit code, I always run the linter" → probably a `PostToolUse` hook
+- "I want to see [X] at the start of every session" → probably a `SessionStart` hook addition
+- "I forget to [X] at the end of sessions" → probably a `Stop` hook addition
+- "Every week / every morning I want to [X]" → probably a loop
+- "I wish it would just check [all the files / the whole codebase] for [X]" → probably an agent
+- "Whenever I ship, I also want it to [do Y automatically]" → probably an agent called by `/ship`
+- "I want to be able to say [phrase] and have it happen" → skill
 
 Don't filter during the conversation — just notice. The synthesis step is where you reason through what to build.
 
-**Hard rule: don't manufacture.** Only build something if the user's actual description motivated it. If they described nothing that genuinely warrants a skill, ship with the always-active skills. A clean small setup beats a noisy one nobody invokes.
+**Hard rule: don't manufacture.** Only build something if the user's actual description motivated it. A clean small setup beats a noisy one nobody uses.
 
-### Skills vs agents
+### What to build: decision framework
 
-Before synthesising candidates, know which format to reach for:
+Use this to map each candidate from the conversation to the right type. The two questions that matter:
 
-**Build a skill when** the user initiates it and stays in the loop at each step:
-- "run my test-lint-commit sequence" → `/ship`
-- "review this design and tell me what to build" → `/design-review`
-- "help me draft this doc" → `/draft`
+**1. What triggers this?**
 
-Skills live at `.claude/skills/<name>/SKILL.md`. They appear in `/help-me` and are invoked by typing or saying their name.
+```
+User consciously asks for it
+  └── Does it survey broadly / run without user guidance?
+        No  → skill
+        Yes → agent (often called by a skill)
 
-**Build a subagent when** the task runs autonomously, involves many steps, or is called *by* other skills rather than directly by the user:
-- Surveys all component files and produces a consistency report → agent
-- Drafts release notes from git history when `/ship` fires → agent called by `/ship`, not directly by user
-- Reads external data sources and synthesises a summary → agent
+Something else triggers it automatically
+  ├── Session starts              → SessionStart hook (+ optional agent)
+  ├── Session ends                → Stop hook (+ optional agent)
+  ├── Every message the user sends → UserPromptSubmit hook
+  ├── Before Claude touches a file → PreToolUse hook
+  └── After Claude edits something → PostToolUse hook (+ optional agent)
 
-Subagents live at `.claude/agents/<name>.md`. They don't appear in `/help-me` but skills and Claude itself can invoke them by name.
+On a regular schedule
+  └── loop  (e.g. /loop daily /triage, /loop weekly /update)
+```
+
+**2. Does the user stay in the loop?**
+
+If yes at each step → skill. If no, just handle it → agent.
+
+### What each type looks like
+
+**Skill** — user says something, Claude walks through it step by step. Appears in `/help-me`. Lives at `.claude/skills/<name>/SKILL.md`.
+> *"I always run tests, lint, then commit before pushing"* → `/ship`
+
+**Agent** — runs autonomously, ranges across files or data, returns a result. Called by skills, hooks, or by name. Lives at `.claude/agents/<name>.md`.
+> *"Check all my component files for naming inconsistencies"* → `component-auditor` agent invoked by `/design-review`
+
+**Hook** — fires automatically at a lifecycle point, no user trigger needed. Added to `.claude/settings.json`.
+> *"I always have to remind you that we use the `feature/` branch convention"* → `UserPromptSubmit` hook that injects that context into every message  
+> *"Before you touch anything in `/payments`, warn me"* → `PreToolUse` hook  
+> *"After you edit a file, run `npm run lint`"* → `PostToolUse` hook
+
+**Loop** — a skill on a recurring schedule. Suggested as a one-time `/loop` command in the handoff, not built as a file.
+> *"Every Monday I want to triage my Linear issues"* → suggest `/loop weekly /triage` in the handoff
 
 ### Synthesise candidates
 
-After finishing the questionnaire — but before moving to Phase 3 — take a deliberate beat. Read back through everything the user told you and ask:
+After the conversation — before Phase 3 — take a deliberate beat. Re-read what the user told you and ask:
 
-> *"If this person opened Claude Code tomorrow already equipped for their work, what tools would they have that they don't have today?"*
+> *"If this person opened Claude Code tomorrow already equipped for their work, what would be different?"*
 
-For each candidate that surfaces from this question:
+For each candidate that surfaces:
 
-1. **Name the specific workflow** — be precise ("they pull a Figma spec and check it against existing components before writing code", not "they design things")
-2. **Skill or agent?** Use the distinction above.
-3. **Name it in their vocabulary** — use the words they actually used, not generic labels
-4. **Any natural companion?** Does it pair with a create/review counterpart, a plan/execute counterpart, etc. (see Skill families)
+1. **Name the specific workflow** — precisely ("they re-explain the branching convention at the start of every session", not "they have git preferences")
+2. **Apply the decision framework** — which type fits? Skill, agent, hook, or loop?
+3. **Name it in their vocabulary**
+4. **Any natural companion?** (see Skill families)
 
-Then consult the common patterns below to see if any of your candidates match a known pattern — if so, use that pattern's name and structure. Also use the table to catch anything the interview might not have surfaced explicitly.
+Then consult the common patterns below to catch anything the conversation didn't surface explicitly.
 
-A nurse who uses Epic and sends shift notes via Teams. A musician recording in Logic who publishes stems to a shared drive. A data journalist scraping, cleaning, and publishing in a tight loop. The synthesis step is where you build for *their* actual workflow — the table is a reference, not a boundary.
+A nurse who re-explains Epic context every session (→ `UserPromptSubmit` hook), wants shift notes drafted at session end (→ `Stop` hook + agent), and occasionally asks for a full patient summary (→ skill). A musician who always runs a mastering check after exporting (→ `PostToolUse` hook). Build for what *they* described — the table is a reference, not a boundary.
 
-If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome, not a failure.
+If synthesis surfaces no genuine candidates, ship with the always-active skills. That's the right outcome.
 
 ### Common patterns (examples, not a checklist)
 
@@ -300,8 +332,55 @@ Use a project-specific heading so multiple projects can coexist in this file wit
 ### .claude/settings.json
 Configure for this project:
 - Permissions: allow commands this project genuinely needs
-- SessionStart hook: already configured for git context and environment detection — preserve it, extend if needed
-- Additional hooks if the workflow calls for them
+- Extend existing hooks or add new ones based on synthesis candidates (see below)
+
+### Hooks
+
+For each hook candidate from the synthesis, add it to the `hooks` block in `.claude/settings.json`. The existing SessionStart and Stop hooks are already present — extend them rather than replacing them.
+
+**UserPromptSubmit** — inject standing context into every message. Use when the user said they always have to remind Claude about something.
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [{ "type": "command", "command": "echo '<standing context to inject>'" }]
+      }
+    ]
+  }
+}
+```
+
+**PreToolUse** — warn or block before Claude touches specific files or runs specific commands. Use when the user mentioned sensitive paths or "warn me before you touch X".
+```json
+"PreToolUse": [
+  {
+    "matcher": "Edit|Write",
+    "hooks": [{ "type": "command", "command": "echo 'Touching <path> — confirm this is intentional'" }]
+  }
+]
+```
+
+**PostToolUse** — run a command automatically after Claude edits a file. Use when the user described a reaction they always want (linting, tests, syncing).
+```json
+"PostToolUse": [
+  {
+    "matcher": "Edit|Write",
+    "hooks": [{ "type": "command", "command": "<their actual command, e.g. npm run lint>" }]
+  }
+]
+```
+
+Use the user's actual commands and paths — don't use placeholders in the final output.
+
+### Loops
+
+For each loop candidate from the synthesis, don't write a file — add a suggested command to the handoff (Phase 7). Format:
+
+> *"You mentioned you want to [X] every [interval]. You can set that up with one command: `/loop [daily|weekly|monthly] /[skill-name]`."*
+
+Only suggest loops for skills that were actually built. Don't suggest a loop for a skill that doesn't exist yet.
 
 ### Project-specific skills and agents
 
